@@ -22,11 +22,19 @@ test.describe('Fun mode', () => {
     await expect(nextBtn.first()).toBeVisible({ timeout: 5_000 })
   })
 
-  test('legacy /c/:id redirects to fun channel', async ({ page }) => {
-    // We don't know a valid ID, but we can test the redirect behavior
-    await page.goto('/c/test123')
+  test('legacy /c/:id redirects to fun channel', async ({ page, request }) => {
+    // Use a real cam id: the fun channel page 302s unknown ids to a random
+    // channel, so an arbitrary id like "test123" never stays in the URL.
+    const res = await request.get('/api/cam')
+    expect(res.ok()).toBe(true)
+    const { id } = await res.json()
+    expect(typeof id).toBe('string')
+    expect(id.length).toBeGreaterThan(0)
 
-    // Should redirect to /fun/c/test123
-    await expect(page).toHaveURL(/\/fun\/c\/test123/)
+    await page.goto(`/c/${id}`)
+
+    // Should 301-redirect to /fun/c/<id>, preserving the id.
+    const escapedId = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    await expect(page).toHaveURL(new RegExp(`/fun/c/${escapedId}$`))
   })
 })

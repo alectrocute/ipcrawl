@@ -51,6 +51,11 @@ test.describe('Explore catalog page', () => {
   test('mobile filter slideover opens', async ({ page }) => {
     await page.setViewportSize({ width: 480, height: 800 })
     await page.goto('/')
+    // Wait for the app to hydrate before clicking — the filter button's @click
+    // handler only attaches post-hydration, and page.goto's default 'load' event
+    // can fire before the client entry finishes mounting. (<a> link clicks work
+    // pre-hydration via native navigation, but this ref-toggle does not.)
+    await page.waitForLoadState('networkidle')
 
     // On mobile, the filter button should be visible
     const filterBtn = page.locator('.explore__mobile-filters')
