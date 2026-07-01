@@ -118,7 +118,6 @@
 		"NUXT_ENABLE_LIVE_FRAME_PERSIST": "true",
 		"NUXT_SHODAN_REFRESH_ON_BOOT": "false",
     "NUXT_PUBLIC_SITE_URL": "https://ipcrawl.com",
-    "NUXT_SHODAN_API_KEY": "",
     "NUXT_SHODAN_LIMIT_PER_QUERY": "2999",
     "NUXT_PUBLIC_FEATURED_CAM_ID": "",
     // Marketing domain for the "Is My Camera Exposed?" campaign. When this is a

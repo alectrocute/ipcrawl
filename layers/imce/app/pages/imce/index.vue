@@ -38,7 +38,7 @@ useSeoMeta({
       :markers="markers"
       :initial-view="initialView"
       :user-location="userLocation"
-      :cam-open="dialog.open"
+      :cam-open="dialog.open.value"
       @viewchange="onViewChange"
       @select="id => dialog.openCam(id)"
     />

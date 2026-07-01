@@ -25,7 +25,7 @@ useSeoMeta({
       class="mapx__canvas"
       :markers="markers"
       :initial-view="initialView"
-      :cam-open="dialog.open"
+      :cam-open="dialog.open.value"
       @viewchange="onViewChange"
       @select="id => dialog.openCam(id)"
     />

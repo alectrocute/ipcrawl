@@ -120,3 +120,32 @@ jobs:
           echo ""
           echo "✅ Behavior tests included:"
           echo "$TEST_CHANGES" | sed 's/^/  - /'
+
+  # ── Deploy to Cloudflare Workers ───────────────────────────────────────────
+  # Runs only on pushes to main, after static + e2e pass. The Shodan API key
+  # is pulled from GitHub Actions secrets and pushed to Cloudflare as a Worker
+  # secret over stdin — never as a CLI arg, which would leak via process
+  # listings and logs. The build itself doesn't see the key: Nuxt's
+  # runtimeConfig resolves NUXT_* env vars at runtime, so the Worker picks up
+  # the secret from Cloudflare without it ever being baked into the bundle.
+  deploy:
+    needs: [static, e2e]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install
+      - name: Build and deploy Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: pnpm run cf:deploy
+      - name: Sync Shodan API key secret
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          NUXT_SHODAN_API_KEY: ${{ secrets.NUXT_SHODAN_API_KEY }}
+        run: printf '%s' "$NUXT_SHODAN_API_KEY" | pnpm exec wrangler secret put NUXT_SHODAN_API_KEY
