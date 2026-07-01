@@ -11,15 +11,10 @@ import { assertRateLimit, getClientIp, RATE_LIMIT_BINDINGS } from '~~/server/uti
  * optimistic count while keeping the personal cookie bookmark.
  */
 
-// Static pepper: not a secret-management exercise, just enough to make the
-// stored hashes non-reversible by enumerating the IPv4 space.
-// Keeps the legacy "stumbletv" name on purpose: changing it would change
-// every voter hash, orphaning existing cam_favorites rows (inflated counts,
-// double votes). Only bump the suffix if you also wipe the table.
-const VOTER_PEPPER = 'stumbletv-fav-v1'
-
 async function voterHash(ip: string): Promise<string> {
-  const data = new TextEncoder().encode(`${VOTER_PEPPER}:${ip}`)
+  const pepper = useRuntimeConfig().voterPepper
+  if (!pepper) throw createError({ statusCode: 500, statusMessage: 'NUXT_VOTER_PEPPER not configured' })
+  const data = new TextEncoder().encode(`${pepper}:${ip}`)
   const digest = await crypto.subtle.digest('SHA-256', data)
   return [...new Uint8Array(digest)]
     .map(b => b.toString(16).padStart(2, '0'))

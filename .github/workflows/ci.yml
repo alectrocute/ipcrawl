@@ -149,3 +149,8 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           NUXT_SHODAN_API_KEY: ${{ secrets.NUXT_SHODAN_API_KEY }}
         run: printf '%s' "$NUXT_SHODAN_API_KEY" | pnpm exec wrangler secret put NUXT_SHODAN_API_KEY
+      - name: Sync voter pepper secret
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          NUXT_VOTER_PEPPER: ${{ secrets.NUXT_VOTER_PEPPER }}
+        run: printf '%s' "$NUXT_VOTER_PEPPER" | pnpm exec wrangler secret put NUXT_VOTER_PEPPER
