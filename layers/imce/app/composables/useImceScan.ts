@@ -19,7 +19,7 @@ export type ImcePhase = 'locating' | 'scanning' | 'result' | 'denied' | 'unsuppo
 /**
  * Owns geolocation + both data feeds for the /imce page:
  *
- *  - the alert ("are there cameras within X km of you") via /api/imce/nearby,
+ *  - the alert ("are there cameras within your city") via /api/imce/nearby,
  *    a one-shot radius scan keyed to the visitor's coordinate;
  *  - the pannable map markers via /api/map/points, refetched on every settled
  *    pan/zoom exactly like the main map, so the scan map is fully explorable.

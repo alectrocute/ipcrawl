@@ -90,7 +90,7 @@ useSeoMeta({
           name="i-lucide-radar"
           class="imce__scanning-icon"
         />
-        Scanning your surroundings…
+        Scanning your city…
       </div>
     </transition>
 
@@ -118,7 +118,7 @@ useSeoMeta({
         <template v-if="phase === 'locating'">
           <p class="imce__intro-text">
             Allow location access to scan the catalogue for exposed cameras
-            around you.
+            in your city.
           </p>
           <p class="imce__intro-hint">
             <UIcon

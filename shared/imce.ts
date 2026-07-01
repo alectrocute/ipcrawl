@@ -37,16 +37,16 @@ export interface ImceNearbyResponse {
   truncated: boolean
 }
 
-/** Default neighbourhood/town radius scanned around the visitor. */
-export const IMCE_DEFAULT_RADIUS_KM = 5
+/** Default city-wide radius scanned around the visitor. */
+export const IMCE_DEFAULT_RADIUS_KM = 25
 /** Hard cap so a hand-crafted URL can't ask us to scan the planet. */
 export const IMCE_MAX_RADIUS_KM = 50
 /** Cap on cameras returned in the sample (the map itself shows the rest). */
 export const IMCE_MAX_CAMERAS = 24
 /** Bound on candidate rows the radius query scans, to keep D1 work flat. */
 export const IMCE_MAX_CANDIDATES = 5000
-/** Zoom the scan map opens at once the visitor is located. */
-export const IMCE_SCAN_ZOOM = 14
+/** Zoom the scan map opens at once the visitor is located (city scale). */
+export const IMCE_SCAN_ZOOM = 11
 
 /** Lenient finite parse; junk yields `fallback`. */
 function toNum(value: unknown, fallback: number): number {
