@@ -100,6 +100,19 @@ export const EXPLORE_MAX_FILTER_VALUES = 50
 export const EXPLORE_MAX_FAVORITES = EXPLORE_MAX_FILTER_VALUES
 /** Cap on options returned per facet so the sidebar payload stays small. */
 export const EXPLORE_FACET_LIMIT = 300
+/** Typeahead results per facet search request (kept small — full lists use /facets). */
+export const EXPLORE_FACET_SEARCH_LIMIT = 50
+/** Minimum typed length before a facet search hits the server (1-char uses the preloaded list). */
+export const EXPLORE_FACET_SEARCH_MIN_TERM = 2
+
+export type ExploreFacetField = 'country' | 'city' | 'org' | 'manufacturer'
+
+export const EXPLORE_FACET_FIELDS: readonly ExploreFacetField[] = [
+  'country',
+  'city',
+  'org',
+  'manufacturer'
+] as const
 
 /**
  * Normalize query-param value(s) — repeated (`country=US&country=CA`),

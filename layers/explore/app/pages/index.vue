@@ -192,6 +192,7 @@ const sidebarBindings = computed(() => ({
   'manufacturers': manufacturers.value,
   'q': q.value,
   'facets': facets.value,
+  'facetsQuery': filters.facetsQuery.value,
   'facetsLoading': facetsLoading.value,
   'favOnly': favOnly.value,
   'favCount': favoriteCount.value,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ExploreFacet, ExploreFacets, ExploreSort, ExploreSource } from '#shared/explore'
+import type { ExploreFacets, ExploreSort, ExploreSource } from '#shared/explore'
 import {
   EXPLORE_SORT_FAVORITES,
   EXPLORE_SORT_RECENT,
@@ -16,6 +16,7 @@ interface Props {
   manufacturers: string[]
   q: string
   facets: ExploreFacets
+  facetsQuery: Record<string, unknown>
   facetsLoading: boolean
   favOnly: boolean
   favCount: number
@@ -33,7 +34,6 @@ const emit = defineEmits<{
   'clear': []
 }>()
 
-interface FacetItem { label: string, value: string, count: number }
 interface SortItem { label: string, value: ExploreSort }
 
 const sortItems: SortItem[] = [
@@ -41,19 +41,37 @@ const sortItems: SortItem[] = [
   { label: 'Recently Found', value: EXPLORE_SORT_RECENT }
 ]
 
-// Keep already-selected values visible even if the current source filter
-// dropped them out of the facet counts.
-function buildItems(facet: ExploreFacet[], selected: string[]): FacetItem[] {
-  const map = new Map<string, FacetItem>()
-  for (const f of facet) map.set(f.value, { label: f.value, value: f.value, count: f.count })
-  for (const s of selected) if (!map.has(s)) map.set(s, { label: s, value: s, count: 0 })
-  return [...map.values()]
-}
+const countrySearch = useExploreFacetSearch({
+  field: 'country',
+  filterQuery: () => props.facetsQuery,
+  baseline: () => props.facets.countries,
+  selected: () => props.countries
+})
+const { searchTerm: countrySearchTerm, items: countryItems, searchLoading: countrySearchLoading } = countrySearch
 
-const countryItems = computed(() => buildItems(props.facets.countries, props.countries))
-const cityItems = computed(() => buildItems(props.facets.cities, props.cities))
-const orgItems = computed(() => buildItems(props.facets.orgs, props.orgs))
-const manufacturerItems = computed(() => buildItems(props.facets.manufacturers, props.manufacturers))
+const citySearch = useExploreFacetSearch({
+  field: 'city',
+  filterQuery: () => props.facetsQuery,
+  baseline: () => props.facets.cities,
+  selected: () => props.cities
+})
+const { searchTerm: citySearchTerm, items: cityItems, searchLoading: citySearchLoading } = citySearch
+
+const orgSearch = useExploreFacetSearch({
+  field: 'org',
+  filterQuery: () => props.facetsQuery,
+  baseline: () => props.facets.orgs,
+  selected: () => props.orgs
+})
+const { searchTerm: orgSearchTerm, items: orgItems, searchLoading: orgSearchLoading } = orgSearch
+
+const manufacturerSearch = useExploreFacetSearch({
+  field: 'manufacturer',
+  filterQuery: () => props.facetsQuery,
+  baseline: () => props.facets.manufacturers,
+  selected: () => props.manufacturers
+})
+const { searchTerm: manufacturerSearchTerm, items: manufacturerItems, searchLoading: manufacturerSearchLoading } = manufacturerSearch
 
 const countriesModel = computed({
   get: () => props.countries,
@@ -195,12 +213,17 @@ const hasActiveFilters = computed(() =>
       </p>
       <USelectMenu
         v-model="countriesModel"
+        v-model:search-term="countrySearchTerm"
         multiple
+        ignore-filter
         value-key="value"
         :items="countryItems"
         :loading="props.facetsLoading"
         placeholder="Any country"
-        :search-input="{ placeholder: 'Filter countries…' }"
+        :search-input="{
+          placeholder: 'Search countries…',
+          loading: countrySearchLoading || props.facetsLoading
+        }"
         class="w-full"
       >
         <template #item-label="{ item }">
@@ -218,12 +241,17 @@ const hasActiveFilters = computed(() =>
       </p>
       <USelectMenu
         v-model="citiesModel"
+        v-model:search-term="citySearchTerm"
         multiple
+        ignore-filter
         value-key="value"
         :items="cityItems"
         :loading="props.facetsLoading"
         placeholder="Any city"
-        :search-input="{ placeholder: 'Filter cities…' }"
+        :search-input="{
+          placeholder: 'Search cities…',
+          loading: citySearchLoading || props.facetsLoading
+        }"
         class="w-full"
       >
         <template #item-label="{ item }">
@@ -241,12 +269,17 @@ const hasActiveFilters = computed(() =>
       </p>
       <USelectMenu
         v-model="orgsModel"
+        v-model:search-term="orgSearchTerm"
         multiple
+        ignore-filter
         value-key="value"
         :items="orgItems"
         :loading="props.facetsLoading"
         placeholder="Any ISP"
-        :search-input="{ placeholder: 'Filter ISPs…' }"
+        :search-input="{
+          placeholder: 'Search ISPs…',
+          loading: orgSearchLoading || props.facetsLoading
+        }"
         class="w-full"
       >
         <template #item-label="{ item }">
@@ -264,12 +297,17 @@ const hasActiveFilters = computed(() =>
       </p>
       <USelectMenu
         v-model="manufacturersModel"
+        v-model:search-term="manufacturerSearchTerm"
         multiple
+        ignore-filter
         value-key="value"
         :items="manufacturerItems"
         :loading="props.facetsLoading"
         placeholder="Any manufacturer"
-        :search-input="{ placeholder: 'Filter manufacturers…' }"
+        :search-input="{
+          placeholder: 'Search manufacturers…',
+          loading: manufacturerSearchLoading || props.facetsLoading
+        }"
         class="w-full"
       >
         <template #item-label="{ item }">

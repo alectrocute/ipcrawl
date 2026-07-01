@@ -33,6 +33,25 @@ test.describe('API endpoints', () => {
     expect(Array.isArray(body.countries)).toBe(true)
   })
 
+  test('GET /api/explore/facets/search returns matching facet values', async ({ request }) => {
+    const res = await request.get('/api/explore/facets/search?field=country&term=un')
+    expect(res.status()).toBe(200)
+
+    const body = await res.json()
+    expect(Array.isArray(body)).toBe(true)
+    for (const item of body) {
+      expect(item).toHaveProperty('value')
+      expect(item).toHaveProperty('count')
+      expect(typeof item.value).toBe('string')
+      expect(typeof item.count).toBe('number')
+    }
+  })
+
+  test('GET /api/explore/facets/search rejects short terms', async ({ request }) => {
+    const res = await request.get('/api/explore/facets/search?field=country&term=u')
+    expect(res.status()).toBe(400)
+  })
+
   test('GET /api/status returns diagnostic info', async ({ request }) => {
     const res = await request.get('/api/status')
     expect(res.status()).toBe(200)

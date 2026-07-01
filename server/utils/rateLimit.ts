@@ -18,6 +18,8 @@ export interface RateLimitEnv {
   THUMB_RATE_LIMITER?: RateLimitBinding
   /** Direct/cross-site thumb fetches (no Sec-Fetch-Site, curl, hotlinks). */
   THUMB_HOTLINK_RATE_LIMITER?: RateLimitBinding
+  /** Per-IP budget for facet typeahead searches (one GROUP BY per keystroke). */
+  FACET_SEARCH_RATE_LIMITER?: RateLimitBinding
 }
 
 export const RATE_LIMIT_BINDINGS = {
@@ -25,7 +27,8 @@ export const RATE_LIMIT_BINDINGS = {
   favorites: 'FAV_RATE_LIMITER',
   live: 'LIVE_RATE_LIMITER',
   thumb: 'THUMB_RATE_LIMITER',
-  thumbHotlink: 'THUMB_HOTLINK_RATE_LIMITER'
+  thumbHotlink: 'THUMB_HOTLINK_RATE_LIMITER',
+  facetSearch: 'FACET_SEARCH_RATE_LIMITER'
 } as const satisfies Record<string, keyof RateLimitEnv>
 
 export type RateLimitBindingName = keyof RateLimitEnv

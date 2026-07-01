@@ -128,6 +128,10 @@ export default defineNuxtConfig({
     // than the grid. 10 min collapses ~10× more of the per-combo scans into a
     // single origin read at zero perceptible staleness cost.
     '/api/explore/facets': { swr: 600 },
+    // Facet typeahead: one GROUP BY per unique (filters + field + term) combo.
+    // Tallies only move on the daily refresh, so a long SWR is safe and keeps
+    // the tight per-IP rate limit from biting real users mid-search.
+    '/api/explore/facets/search': { swr: 1800 },
     // Map LOD markers: short SWR per snapped-bbox+zoom+filter combo. The client
     // snaps the viewport to grid-cell boundaries, so in-cell panning hits the
     // same key and collapses into one D1 read.

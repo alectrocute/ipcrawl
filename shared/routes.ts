@@ -5,6 +5,7 @@
 export const API_CAM = '/api/cam'
 export const API_EXPLORE_CAMS = '/api/explore/cams'
 export const API_EXPLORE_FACETS = '/api/explore/facets'
+export const API_EXPLORE_FACET_SEARCH = '/api/explore/facets/search'
 export const API_EXPLORE_THUMB = '/api/explore/thumb'
 export const API_EXPLORE_FAVORITE = '/api/explore/favorite'
 export const API_MAP_POINTS = '/api/map/points'

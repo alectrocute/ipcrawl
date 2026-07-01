@@ -114,6 +114,20 @@
 				"limit": 25,
 				"period": 10
 			}
+		},
+		{
+			// Facet dropdown typeahead — one GROUP BY per origin miss. Debounced
+			// on the client (~300ms) but still easy to spam with unique terms,
+			// so this is far tighter than API_RATE_LIMITER. 10 / 10s = 1 rps
+			// sustained per IP — enough for a human typing in four dropdowns,
+			// not enough to strip-mine distinct values. Long SWR on the route
+			// collapses repeat searches into cache hits that don't count here.
+			"name": "FACET_SEARCH_RATE_LIMITER",
+			"namespace_id": "1006",
+			"simple": {
+				"limit": 10,
+				"period": 10
+			}
 		}
 	],
 	"triggers": {

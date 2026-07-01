@@ -8,6 +8,7 @@ import type {
 } from '#shared/explore'
 import {
   EXPLORE_FACET_LIMIT,
+  EXPLORE_FACET_SEARCH_LIMIT,
   EXPLORE_MAX_FAVORITES,
   EXPLORE_SORT_RECENT,
   EXPLORE_SOURCE_LIVE
@@ -336,6 +337,38 @@ async function facetFor(
        LIMIT ?`
     )
     .bind(...params, EXPLORE_FACET_LIMIT)
+    .all<{ value: string, count: number }>()
+  return rows.results
+}
+
+/**
+ * Typeahead search for one facet dimension. Cross-filtered like `getFacets`, but
+ * narrows values with a case-insensitive substring match on the searched column.
+ */
+export async function searchFacet(
+  column: FacetColumn,
+  term: string,
+  query: ExploreQuery,
+  event?: H3Event
+): Promise<{ value: string, count: number }[]> {
+  const db = await getExploreDb(event)
+  const { sql: where, params } = buildFilters(query, { skip: column })
+  const notNull = `${column} IS NOT NULL AND ${column} != ''`
+  const clauses = [notNull, `${column} LIKE ? ESCAPE '\\'`]
+  const searchParams = [...params, `%${term.replace(/[%_\\]/g, m => `\\${m}`)}%`]
+  const fullWhere = where
+    ? `${where} AND ${clauses.join(' AND ')}`
+    : ` WHERE ${clauses.join(' AND ')}`
+
+  const rows = await db
+    .prepare(
+      `SELECT ${column} AS value, COUNT(*) AS count
+       FROM cams${fullWhere}
+       GROUP BY ${column}
+       ORDER BY count DESC, value ASC
+       LIMIT ?`
+    )
+    .bind(...searchParams, EXPLORE_FACET_SEARCH_LIMIT)
     .all<{ value: string, count: number }>()
   return rows.results
 }
