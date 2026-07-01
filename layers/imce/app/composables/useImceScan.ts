@@ -8,13 +8,20 @@ import { API_IMCE_NEARBY, API_MAP_POINTS } from '#shared/routes'
  * The scan walks a small state machine:
  *
  *   locating ──► scanning ──► result            (happy path)
- *      │  └────► denied | unsupported | error   (no usable location)
+ *      └────► denied | unsupported | error
  *
- * `locating` shows the loading veil while the browser's native permission
- * prompt is up; once coordinates land we flip to `scanning` (the map is now
- * visible) and, when the nearby count resolves, to `result` (the alert).
+ * `locating` is up while the browser's permission prompt / geolocation resolves.
  */
 export type ImcePhase = 'locating' | 'scanning' | 'result' | 'denied' | 'unsupported' | 'error'
+
+/** Automatic retries for transient geolocation failures before surfacing an error. */
+const IMCE_GEO_ERROR_RETRIES = 2
+const IMCE_GEO_ERROR_RETRY_MS = 1500
+
+/** Phases where a permission grant (or reset to "ask") should re-trigger the scan. */
+function isAwaitingPermission(phase: ImcePhase): boolean {
+  return phase === 'denied' || phase === 'error'
+}
 
 /**
  * Owns geolocation + both data feeds for the /imce page:
@@ -80,7 +87,74 @@ export function useImceScan() {
     void loadPoints(view)
   }
 
-  function locate(): void {
+  let geoRetryTimer: ReturnType<typeof setTimeout> | undefined
+  let geoAttemptId = 0
+  let geoErrorRetries = 0
+  let permissionStatus: PermissionStatus | null = null
+
+  function clearGeoRetryTimer(): void {
+    if (geoRetryTimer !== undefined) {
+      clearTimeout(geoRetryTimer)
+      geoRetryTimer = undefined
+    }
+  }
+
+  function onGeoSuccess(pos: GeolocationPosition, attemptId: number): void {
+    if (attemptId !== geoAttemptId) return
+    clearGeoRetryTimer()
+    geoErrorRetries = 0
+
+    const lat = clampLat(pos.coords.latitude)
+    const lng = clampLon(pos.coords.longitude)
+    userLocation.value = { lat, lng }
+    initialView.value = { lat, lng, zoom: IMCE_SCAN_ZOOM }
+    phase.value = 'scanning'
+    // The map's first viewchange (on ready) kicks off loadPoints; the
+    // radius scan runs in parallel and gates the flip to `result`.
+    loadNearby(lat, lng).finally(() => {
+      if (attemptId !== geoAttemptId) return
+      phase.value = 'result'
+    })
+  }
+
+  function scheduleGeoRetry(attemptId: number): void {
+    clearGeoRetryTimer()
+    geoRetryTimer = setTimeout(() => {
+      geoRetryTimer = undefined
+      if (attemptId !== geoAttemptId) return
+      requestLocation()
+    }, IMCE_GEO_ERROR_RETRY_MS)
+  }
+
+  function onGeoError(err: GeolocationPositionError, attemptId: number): void {
+    if (attemptId !== geoAttemptId) return
+
+    if (err.code === err.PERMISSION_DENIED) {
+      clearGeoRetryTimer()
+      geoErrorRetries = 0
+      phase.value = 'denied'
+      return
+    }
+
+    const transient = err.code === err.TIMEOUT || err.code === err.POSITION_UNAVAILABLE
+    if (transient && geoErrorRetries < IMCE_GEO_ERROR_RETRIES) {
+      geoErrorRetries++
+      phase.value = 'locating'
+      scheduleGeoRetry(attemptId)
+      return
+    }
+
+    clearGeoRetryTimer()
+    geoErrorRetries = 0
+    phase.value = 'error'
+    errorMessage.value = err.code === err.TIMEOUT
+      ? 'Locating you took too long. Check your signal and try again.'
+      : 'We couldn\'t pin down your location. Try again in a moment.'
+  }
+
+  function requestLocation(): void {
+    clearGeoRetryTimer()
+    const attemptId = ++geoAttemptId
     phase.value = 'locating'
     errorMessage.value = null
 
@@ -90,33 +164,56 @@ export function useImceScan() {
     }
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = clampLat(pos.coords.latitude)
-        const lng = clampLon(pos.coords.longitude)
-        userLocation.value = { lat, lng }
-        initialView.value = { lat, lng, zoom: IMCE_SCAN_ZOOM }
-        phase.value = 'scanning'
-        // The map's first viewchange (on ready) kicks off loadPoints; the
-        // radius scan runs in parallel and gates the flip to `result`.
-        loadNearby(lat, lng).finally(() => {
-          phase.value = 'result'
-        })
-      },
-      (err) => {
-        if (err.code === err.PERMISSION_DENIED) {
-          phase.value = 'denied'
-        } else {
-          phase.value = 'error'
-          errorMessage.value = err.code === err.TIMEOUT
-            ? 'Locating you took too long. Check your signal and try again.'
-            : 'We couldn\'t pin down your location. Try again in a moment.'
-        }
-      },
+      pos => onGeoSuccess(pos, attemptId),
+      err => onGeoError(err, attemptId),
       { enableHighAccuracy: true, timeout: 15_000, maximumAge: 60_000 }
     )
   }
 
-  onMounted(locate)
+  function maybeRetryFromPermission(): void {
+    if (!permissionStatus || mapVisible.value) return
+    if (!isAwaitingPermission(phase.value)) return
+
+    const { state } = permissionStatus
+    if (state === 'granted' || state === 'prompt') requestLocation()
+  }
+
+  function onPermissionChange(): void {
+    maybeRetryFromPermission()
+  }
+
+  async function bindPermissionListener(): Promise<void> {
+    if (!import.meta.client || !navigator.permissions?.query) return
+    try {
+      permissionStatus = await navigator.permissions.query({ name: 'geolocation' })
+      permissionStatus.onchange = onPermissionChange
+    } catch {
+      // Permissions API unavailable for geolocation in this browser — fall
+      // back to manual retry only.
+    }
+  }
+
+  function onVisible(): void {
+    if (document.visibilityState !== 'visible') return
+    maybeRetryFromPermission()
+  }
+
+  function locate(): void {
+    requestLocation()
+  }
+
+  onMounted(() => {
+    void bindPermissionListener()
+    requestLocation()
+    document.addEventListener('visibilitychange', onVisible)
+  })
+
+  onBeforeUnmount(() => {
+    clearGeoRetryTimer()
+    geoAttemptId++
+    document.removeEventListener('visibilitychange', onVisible)
+    if (permissionStatus) permissionStatus.onchange = null
+  })
 
   return {
     phase,

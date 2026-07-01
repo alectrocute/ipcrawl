@@ -108,6 +108,21 @@ useSeoMeta({
       </div>
     </transition>
 
+    <!-- Points at the browser's location prompt from the page center. -->
+    <transition name="imce-fade">
+      <div
+        v-if="phase === 'locating'"
+        class="imce__prompt-hint"
+        aria-hidden="true"
+      >
+        <UIcon
+          name="i-lucide-arrow-left"
+          class="imce__prompt-arrow"
+        />
+        <span class="imce__prompt-label">Allow this time</span>
+      </div>
+    </transition>
+
     <!-- Pre-map veil: loading / permission prompt / failure states. -->
     <transition name="imce-fade">
       <ImceIntroShell
@@ -125,7 +140,7 @@ useSeoMeta({
               name="i-lucide-loader-circle"
               class="imce__intro-spin"
             />
-            Waiting for your location…
+            Waiting for you to accept the location request...
           </p>
         </template>
 
@@ -135,8 +150,8 @@ useSeoMeta({
             your browser except to query cameras around your coordinates.
           </p>
           <p class="imce__intro-hint imce__intro-hint--warn">
-            Location access was blocked. Re-enable it for this site in your
-            browser's address bar, then try again.
+            Location request was blocked. Enable it in your browser's address
+            bar — the scan will resume automatically.
           </p>
         </template>
 
@@ -220,6 +235,48 @@ useSeoMeta({
 .imce__canvas {
   position: absolute;
   inset: 0;
+}
+
+/* Nudge toward the browser's location prompt from the page center. */
+.imce__prompt-hint {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) translateY(-40vh);
+  z-index: 1003;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.imce__prompt-arrow {
+  width: 28px;
+  height: 28px;
+  color: var(--imce-alert-bright, #ffb088);
+  filter: drop-shadow(0 0 8px rgba(255, 138, 76, 0.45));
+  animation: imce-prompt-bob 1.1s ease-in-out infinite;
+}
+
+.imce__prompt-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--imce-alert, #ff8a4c);
+  white-space: nowrap;
+}
+
+@keyframes imce-prompt-bob {
+  0%, 100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(-6px);
+    opacity: 0.75;
+  }
 }
 
 .imce__header {
@@ -380,7 +437,8 @@ useSeoMeta({
 
 @media (prefers-reduced-motion: reduce) {
   .imce__sync-spin,
-  .imce__scanning-icon {
+  .imce__scanning-icon,
+  .imce__prompt-arrow {
     animation: none;
   }
 
