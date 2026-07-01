@@ -14,12 +14,12 @@ defineOptions({ name: 'ExploreAboutCard' })
     </p>
 
     <a
-      class="about__author"
-      href="https://alec.is/posts/ip-crawl-exposing-the-massive-open-webcam-crisis/"
+      class="about__author about__author--reddit"
+      href="https://reddit.com/r/ipcrawl"
       target="_blank"
       rel="noopener"
     >
-      <span class="about__author-name">alec.is</span>
+      <span class="about__author-name">reddit.com/r/ipcrawl</span>
       <UIcon
         name="i-lucide-arrow-up-right"
         class="about__author-arrow"
@@ -27,12 +27,12 @@ defineOptions({ name: 'ExploreAboutCard' })
     </a>
 
     <a
-      class="about__author about__author--reddit"
-      href="https://reddit.com/r/ipcrawl"
+      class="about__author about__author--github"
+      href="https://github.com/alectrocute/ipcrawl"
       target="_blank"
       rel="noopener"
     >
-      <span class="about__author-name">r/ipcrawl</span>
+      <span class="about__author-name">github.com/alectrocute/ipcrawl</span>
       <UIcon
         name="i-lucide-arrow-up-right"
         class="about__author-arrow"
@@ -86,7 +86,12 @@ defineOptions({ name: 'ExploreAboutCard' })
   border-radius: 4px;
 }
 
-.about__author--reddit {
+.about__author:first-of-type {
+  margin-top: 13px;
+}
+
+.about__author--reddit,
+.about__author--github {
   margin-top: 8px;
   padding-top: 0;
   border-top: none;
