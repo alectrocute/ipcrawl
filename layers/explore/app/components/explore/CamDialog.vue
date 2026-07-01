@@ -4,6 +4,7 @@ import { EXPLORE_FEED_BADGE_LABEL, type ExploreFeedBadgeTone } from '../../utils
 
 interface Props {
   open: boolean
+  camId: string
   detail: ExploreCamDetail | null
   loading: boolean
 }
@@ -22,7 +23,7 @@ const favCount = computed(() => (props.detail ? countOf(props.detail.id, props.d
 // --- Live feed poller -------------------------------------------------------
 const { liveSrc, frameLoaded, frameErrored, isLiveFrame } = useLiveFramePoller(
   () => props.detail,
-  () => props.open && !!props.detail
+  () => props.open && !!props.detail && props.detail.id === props.camId
 )
 
 // Badge follows what's actually on screen: once a frame's provenance is known

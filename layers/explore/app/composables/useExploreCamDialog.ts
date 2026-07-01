@@ -51,6 +51,7 @@ export async function useExploreCamDialog() {
   // through many cams, but Back should still close the dialog rather than
   // unwind every cam they glanced at.
   const openCam = (id: string, opts: { replace?: boolean } = {}) => {
+    if (displayDetail.value?.id !== id) displayDetail.value = null
     const method = opts.replace ? router.replace : router.push
     return method.call(router, { query: { ...route.query, cam: id } })
   }

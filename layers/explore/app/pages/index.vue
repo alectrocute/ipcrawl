@@ -350,6 +350,7 @@ useSeoMeta({
 
     <ExploreCamDialog
       :open="dialog.open.value"
+      :cam-id="dialog.camId.value"
       :detail="dialog.displayDetail.value"
       :loading="dialog.loading.value"
       @update:open="dialog.setOpen"
