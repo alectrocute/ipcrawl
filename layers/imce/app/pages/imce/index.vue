@@ -132,8 +132,7 @@ useSeoMeta({
       >
         <template v-if="phase === 'locating'">
           <p class="imce__intro-text">
-            Allow location access to scan the catalogue for exposed cameras
-            in your city.
+            Using the GPS Location feature of your web browser, we'll scan the IP Crawl catalogue for exposed cameras in your area.
           </p>
           <p class="imce__intro-hint">
             <UIcon
