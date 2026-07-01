@@ -1,5 +1,5 @@
 import type { H3Event } from 'h3'
-import type { ExploreQuery, ExploreSort, ExploreSource } from '#shared/explore'
+import type { ExploreFacetField, ExploreQuery, ExploreSort, ExploreSource } from '#shared/explore'
 import {
   EXPLORE_DEFAULT_PAGE_SIZE,
   EXPLORE_FACET_FIELDS,
@@ -9,7 +9,6 @@ import {
   EXPLORE_SORT_RECENT,
   EXPLORE_SOURCE_CACHED,
   EXPLORE_SOURCE_LIVE,
-  type ExploreFacetField,
   toFilterValues,
   toQueryInt
 } from '#shared/explore'
