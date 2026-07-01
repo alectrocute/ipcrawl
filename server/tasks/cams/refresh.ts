@@ -277,7 +277,8 @@ async function runRefresh(
       for await (const cam of streamCamsForQuery(
         query,
         config.shodanApiKey,
-        config.shodanLimitPerQuery
+        config.shodanLimitPerQuery,
+        config.camIdPepper
       )) {
         // Streaming a big query can run minutes between flushes (blocked /
         // duplicate cams never fill a batch), so beat here too. Time-gated,

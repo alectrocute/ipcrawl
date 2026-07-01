@@ -140,7 +140,8 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 export async function* streamCamsForQuery(
   query: string,
   apiKey: string,
-  limit = 200
+  limit = 200,
+  camIdPepper = ''
 ): AsyncGenerator<Cam> {
   if (!apiKey) {
     throw new Error('Shodan API key is missing.')
@@ -248,7 +249,7 @@ export async function* streamCamsForQuery(
       const lon = banner.location?.longitude
 
       yield {
-        id: await shortHash(key),
+        id: await shortHash(key, camIdPepper),
         ip,
         port,
         country: banner.location?.country_name,
@@ -274,11 +275,12 @@ export async function* streamCamsForQuery(
 }
 
 /**
- * Stable short id from `ip:port`. Uses WebCrypto (`crypto.subtle`), which is
- * a global in both modern Node and Cloudflare Workers — same call everywhere.
+ * Stable short id from `ip:port`. Prepends a pepper so the hash can't be
+ * reversed by enumerating the IPv4×port space. Uses WebCrypto
+ * (`crypto.subtle`), available in both modern Node and Cloudflare Workers.
  */
-async function shortHash(input: string): Promise<string> {
-  const buf = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(input))
+async function shortHash(input: string, pepper: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${pepper}:${input}`))
   let hex = ''
   for (const byte of new Uint8Array(buf)) hex += byte.toString(16).padStart(2, '0')
   return hex.slice(0, 16)

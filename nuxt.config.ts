@@ -36,6 +36,7 @@ export default defineNuxtConfig({
     },
     shodanApiKey: process.env.NUXT_SHODAN_API_KEY || '',
     voterPepper: process.env.NUXT_VOTER_PEPPER || '',
+    camIdPepper: process.env.NUXT_CAM_ID_PEPPER || '',
     shodanRefreshOnBoot: process.env.NUXT_SHODAN_REFRESH_ON_BOOT === 'true',
     shodanLimitPerQuery: parseInt(process.env.NUXT_SHODAN_LIMIT_PER_QUERY || '1500'),
     // Emergency brake for edge-cost spikes. When true, expensive live work is

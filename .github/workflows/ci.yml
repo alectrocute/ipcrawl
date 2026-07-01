@@ -154,3 +154,8 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           NUXT_VOTER_PEPPER: ${{ secrets.NUXT_VOTER_PEPPER }}
         run: printf '%s' "$NUXT_VOTER_PEPPER" | pnpm exec wrangler secret put NUXT_VOTER_PEPPER
+      - name: Sync cam ID pepper secret
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          NUXT_CAM_ID_PEPPER: ${{ secrets.NUXT_CAM_ID_PEPPER }}
+        run: printf '%s' "$NUXT_CAM_ID_PEPPER" | pnpm exec wrangler secret put NUXT_CAM_ID_PEPPER

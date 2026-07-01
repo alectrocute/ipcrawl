@@ -1,2 +1,3 @@
 NUXT_SHODAN_API_KEY=your-shodan-api-key
 NUXT_VOTER_PEPPER=your-voter-pepper
+NUXT_CAM_ID_PEPPER=your-cam-id-pepper
