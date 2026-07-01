@@ -1,0 +1,35 @@
+# Nuxt dev/build outputs
+.output
+.data
+.nuxt
+.nitro
+.cache
+dist
+
+# Node dependencies (pnpm is the package manager — no npm lockfile)
+node_modules
+package-lock.json
+
+# Logs
+logs
+*.log
+
+# Misc
+.DS_Store
+.fleet
+.idea
+
+# Local env files
+.env
+.env.*
+!.env.example
+.dev.vars
+!.dev.vars.example
+
+# Wrangler
+.wrangler
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/

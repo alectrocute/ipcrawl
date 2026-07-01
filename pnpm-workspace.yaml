@@ -1,0 +1,11 @@
+allowBuilds:
+  '@parcel/watcher': false
+  '@tailwindcss/oxide': false
+  esbuild: false
+  sharp: false
+  unrs-resolver: false
+  vue-demi: false
+  workerd: false
+minimumReleaseAgeExclude:
+  - miniflare@4.20260611.0
+  - wrangler@4.100.0

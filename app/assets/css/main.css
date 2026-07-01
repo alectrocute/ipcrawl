@@ -1,0 +1,232 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme static {
+  /* Main reading face: a humanist sans for body copy, labels and standard
+     controls. The mono face is reserved for the brand wordmark and the
+     deliberately "terminal" stylized buttons (which opt in via --font-mono). */
+  --font-sans: 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Primary accent scale — this is the Nuxt UI `primary` (see app.config.ts).
+     Every step is DERIVED from the single base accent --phosphor (defined in
+     :root) by mixing toward white/black, so re-theming the whole app is a
+     one-line change: edit --phosphor-rgb in :root and this scale, the glows,
+     borders, fills and phosphor text all follow. */
+  --color-phosphor-50: color-mix(in oklab, var(--phosphor), white 90%);
+  --color-phosphor-100: color-mix(in oklab, var(--phosphor), white 82%);
+  --color-phosphor-200: color-mix(in oklab, var(--phosphor), white 64%);
+  --color-phosphor-300: color-mix(in oklab, var(--phosphor), white 36%);
+  --color-phosphor-400: var(--phosphor);
+  --color-phosphor-500: color-mix(in oklab, var(--phosphor), black 16%);
+  --color-phosphor-600: color-mix(in oklab, var(--phosphor), black 32%);
+  --color-phosphor-700: color-mix(in oklab, var(--phosphor), black 48%);
+  --color-phosphor-800: color-mix(in oklab, var(--phosphor), black 60%);
+  --color-phosphor-900: color-mix(in oklab, var(--phosphor), black 68%);
+  --color-phosphor-950: color-mix(in oklab, var(--phosphor), black 82%);
+
+  /* Neutral scale for Nuxt UI components (selects, pagination, inputs…).
+     Tailwind's default `slate` carries a blue hue that clashed with the
+     phosphor-on-near-black studio look; this is a desaturated green-grey tuned
+     to the surfaces in :root so form controls read as part of the same theme. */
+  --color-graphite-50: #f4f6f5;
+  --color-graphite-100: #e4e8e6;
+  --color-graphite-200: #c8cfcc;
+  --color-graphite-300: #a4ada9;
+  --color-graphite-400: #7e8783;
+  --color-graphite-500: #626a66;
+  --color-graphite-600: #4c534f;
+  --color-graphite-700: #363b39;
+  --color-graphite-800: #202523;
+  --color-graphite-900: #131715;
+  --color-graphite-950: #0a0d0c;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces — layered near-blacks with a faint cool cast so the room reads
+     as a dark studio rather than pure #000. */
+  --bg-0: #040605;
+  --bg-1: #070a09;
+  --bg-2: #0b0f0e;
+
+  /* Glass materials — used for every floating control surface. */
+  --glass: rgba(12, 17, 16, 0.55);
+  --glass-strong: rgba(7, 11, 10, 0.82);
+  --hairline: rgba(255, 255, 255, 0.08);
+  --hairline-strong: rgba(255, 255, 255, 0.16);
+
+  /* ======================================================================
+     THEME ACCENT — SINGLE SOURCE OF TRUTH.
+     Change these three RGB channels and the ENTIRE UI re-tints: the Nuxt UI
+     primary scale (--color-phosphor-* above), every glow/border/fill, the
+     phosphor text and the dark "ink" used on solid accent fills.
+     Currently a friendly cyan. (The original CRT hacker-green was: 0 220 130.)
+     Components never hardcode the colour — they reference the vars below or
+     `rgb(var(--phosphor-rgb) / <alpha>)` for translucency. */
+  --phosphor-rgb: 0 211 230;
+
+  /* Everything below is derived from --phosphor-rgb. */
+  --phosphor: rgb(var(--phosphor-rgb));
+  --phosphor-bright: color-mix(in oklab, var(--phosphor), white 42%);
+  --phosphor-soft: rgb(var(--phosphor-rgb) / 0.5);
+  --phosphor-glow: rgb(var(--phosphor-rgb) / 0.35);
+  /* Near-black, faintly accent-tinted — for text/icons on a solid phosphor fill. */
+  --phosphor-ink: color-mix(in oklab, var(--phosphor), black 88%);
+  /* Deep shade — the low ambient glow rising from the "studio floor". */
+  --phosphor-deep: color-mix(in oklab, var(--phosphor), black 62%);
+
+  /* Alert amber — the one warm accent, reserved for the "Is My Camera Exposed?"
+     scan so a real warning stands apart from the all-green studio chrome. */
+  --imce-alert: #ff8a4c;
+  --imce-alert-bright: #ffb088;
+  --imce-alert-soft: rgba(255, 138, 76, 0.55);
+  --imce-alert-glow: rgba(255, 120, 60, 0.3);
+
+  /* Typography colors. */
+  --text: #f4f6f5;
+  --text-dim: #8b9591;
+  --text-mute: #58615d;
+
+  /* Legacy aliases kept so existing component styles stay valid. */
+  --stumble-bg: var(--bg-0);
+  --stumble-fg: var(--text);
+  --stumble-dim: var(--text-dim);
+  --stumble-accent: var(--phosphor);
+}
+
+html,
+body,
+#__nuxt {
+  height: 100%;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+body.ipcrawl-body {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-sans);
+  /* ss01/cv01 are JetBrains Mono stylistic sets; harmless for the humanist body
+     face and still inherited by the mono elements (logo, stylized buttons). */
+  font-feature-settings: "ss01", "cv01";
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  -webkit-touch-callout: none;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+
+  /* The "studio": a deep ambient field. A soft phosphor-tinted glow rises
+     from behind where the monitor sits, with a cool vignette toward the
+     edges so the room feels lit rather than flat. */
+  background-color: var(--bg-0);
+  background-image:
+    radial-gradient(120% 80% at 50% 38%, rgb(var(--phosphor-rgb) / 0.07) 0%, transparent 55%),
+    radial-gradient(140% 120% at 50% 120%, color-mix(in srgb, var(--phosphor-deep), transparent 90%) 0%, transparent 60%),
+    radial-gradient(100% 100% at 50% 0%, rgba(20, 30, 34, 0.55) 0%, transparent 70%),
+    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
+  background-attachment: fixed;
+}
+
+/* Fine film grain — barely-there texture so large dark areas never band. */
+body.ipcrawl-body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Almost-imperceptible global scanline texture. Plain alpha compositing on
+   purpose — a mix-blend-mode here forces the compositor to re-blend the whole
+   viewport against everything scrolling beneath it on every frame, and at
+   1.4% white the visual difference from `overlay` is nil. */
+body.ipcrawl-body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.004) 0px,
+    rgba(255, 255, 255, 0.004) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  z-index: 1000;
+}
+
+::selection {
+  background: var(--phosphor);
+  color: var(--phosphor-ink);
+}
+
+/* --- Route view transitions ------------------------------------------------
+   Cross-page morphs (experimental.viewTransition in nuxt.config). Three
+   shared elements are named in component CSS:
+
+     brand        — the IP CRAWL logo (IpcrawlLogo.vue), glides between
+                    positions as pages change (header to header, or down into
+                    the fun-mode pill)
+     page-header  — the bordered header bar, stretches between page widths
+     page-shell   — the centered content column (1600px catalogue vs the
+                    760/880px about/stats columns), so the width change reads
+                    as the page condensing/expanding
+
+   Browsers without the API (and prefers-reduced-motion users) skip all of
+   this — Nuxt falls back to an instant swap. */
+
+/* Background, grain and scanlines are identical on every page, so the root
+   crossfade carries no information — keep it brisk. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 300ms;
+}
+
+/* One shared clock for the three morphs so nothing arrives out of step. */
+::view-transition-group(page-shell),
+::view-transition-group(page-header),
+::view-transition-group(brand) {
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Sync the snapshot crossfades to the same clock. */
+::view-transition-old(page-shell),
+::view-transition-new(page-shell),
+::view-transition-old(page-header),
+::view-transition-new(page-header) {
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The shells are full-page columns of very different heights; clip the pair
+   to the morphing box so the taller snapshot doesn't bleed past the shorter
+   page during the squeeze. */
+::view-transition-image-pair(page-shell) {
+  overflow: clip;
+}
+
+/* The wordmark renders identically on every page, so a crossfade only adds
+   shimmer: drop the old snapshot and let the live one glide. */
+::view-transition-old(brand) {
+  display: none;
+}
+
+::view-transition-new(brand) {
+  animation: none;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

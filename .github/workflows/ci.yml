@@ -1,0 +1,122 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Static checks ──────────────────────────────────────────────────────────
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install
+      - run: pnpm run lint
+      - run: pnpm run typecheck
+
+  # ── E2E tests (Playwright) ─────────────────────────────────────────────────
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install
+      - run: pnpm exec playwright install chromium
+      - run: pnpm run test:e2e
+      - uses: actions/upload-artifact@v5
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # ── Human-account check ────────────────────────────────────────────────────
+  # Only human-operated GitHub accounts may contribute. This job checks the PR
+  # author against known bot patterns and a curated deny-list.
+  human-account:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Verify human account
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          AUTHOR="${{ github.event.pull_request.user.login }}"
+          echo "Checking author: $AUTHOR"
+
+          # GitHub's own bot accounts
+          if [[ "$AUTHOR" =~ ^(dependabot|renovate|greenkeeper|snyk|imgbot|allcontributors|fossabot|sonarcloud|codecov|coveralls|deepcode|deepsource|gcmole|prisma-bot|changeset-bot|blitz-bot|github-actions)\[bot\]$ ]]; then
+            echo "::error::PRs from automated bot accounts ($AUTHOR) are not accepted."
+            exit 1
+          fi
+
+          # Common AI/automation account patterns
+          if [[ "$AUTHOR" =~ (bot|auto|ci-bot|ai-agent|gpt|copilot|claude)$ ]]; then
+            echo "::error::PR author '$AUTHOR' matches automated account pattern."
+            exit 1
+          fi
+
+          # Check account age (must be > 30 days)
+          CREATED=$(gh api "users/$AUTHOR" --jq '.created_at')
+          CREATED_TS=$(date -d "$CREATED" +%s)
+          THIRTY_DAYS_AGO=$(date -d '30 days ago' +%s)
+          if [ "$CREATED_TS" -gt "$THIRTY_DAYS_AGO" ]; then
+            echo "::error::Account '$AUTHOR' is less than 30 days old. New burner accounts are not accepted."
+            exit 1
+          fi
+
+          echo "✅ $AUTHOR is a verified human account."
+
+  # ── Behavior-test coverage check ───────────────────────────────────────────
+  # Every PR that touches application code must include at least one behavior
+  # test (Playwright spec or API integration spec) in the diff.
+  test-coverage:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check for behavior test coverage
+        run: |
+          # Get the list of changed files in this PR
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+
+          # Determine if any application code was changed
+          APP_CHANGES=$(echo "$CHANGED" | grep -E '^(app|layers|server|shared)/' || true)
+
+          if [ -z "$APP_CHANGES" ]; then
+            echo "ℹ️  No application code changed — test coverage check skipped."
+            exit 0
+          fi
+
+          echo "Application files changed:"
+          echo "$APP_CHANGES" | sed 's/^/  - /'
+
+          # Check if any behavior test files were added or modified
+          TEST_CHANGES=$(echo "$CHANGED" | grep -E '(e2e/.*\.spec\.ts|e2e/.*\.e2e\.ts|\.test\.ts|\.spec\.ts)' || true)
+
+          if [ -z "$TEST_CHANGES" ]; then
+            echo ""
+            echo "::error::This PR changes application code but includes NO behavior tests."
+            echo "::error::Every PR that modifies files under app/, layers/, server/, or shared/"
+            echo "::error::must include at least one Playwright spec or API integration spec."
+            echo "::error::See CONTRIBUTING.md for details."
+            exit 1
+          fi
+
+          echo ""
+          echo "✅ Behavior tests included:"
+          echo "$TEST_CHANGES" | sed 's/^/  - /'
