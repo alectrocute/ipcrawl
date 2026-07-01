@@ -12,7 +12,10 @@ import { assertRateLimit, getClientIp, RATE_LIMIT_BINDINGS } from '~~/server/uti
  */
 
 async function voterHash(ip: string): Promise<string> {
-  const pepper = useRuntimeConfig().voterPepper
+  const configured = useRuntimeConfig().voterPepper
+  // E2E and local `nuxt dev` run without Cloudflare secrets; a fixed dev-only
+  // pepper keeps favorite routes testable while production still requires config.
+  const pepper = configured || (import.meta.dev ? 'dev-local-voter-pepper' : '')
   if (!pepper) throw createError({ statusCode: 500, statusMessage: 'NUXT_VOTER_PEPPER not configured' })
   const data = new TextEncoder().encode(`${pepper}:${ip}`)
   const digest = await crypto.subtle.digest('SHA-256', data)
