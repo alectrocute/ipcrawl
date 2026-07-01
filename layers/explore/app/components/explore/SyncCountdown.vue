@@ -6,7 +6,12 @@ defineOptions({ name: 'ExploreSyncCountdown' })
 
 // `large` renders the stats-page hero variant: same data and states, scaled
 // up to hold its own next to the stat tiles.
-const props = withDefaults(defineProps<{ large?: boolean }>(), { large: false })
+// `onlyWithinMs` gates the compact sidebar card: render only inside that
+// window before the next cron boundary (always shown while a run is in flight).
+const props = withDefaults(defineProps<{
+  large?: boolean
+  onlyWithinMs?: number
+}>(), { large: false })
 
 // The compact sidebar card doubles as a shortcut into the full stats page. The
 // large hero variant already lives *on* that page, so it stays a plain aside.
@@ -79,6 +84,13 @@ const overdue = computed(() => ready.value && remainingMs.value <= 0)
 // and the powered-up card styling.
 const active = computed(() => syncing.value || imminent.value)
 
+const visible = computed(() => {
+  if (props.onlyWithinMs === undefined) return true
+  if (syncing.value) return true
+  if (!ready.value) return false
+  return remainingMs.value <= props.onlyWithinMs
+})
+
 const progressPct = computed(() => {
   if (!ready.value || lastAt.value === null || targetAt.value === null) return 0
   // The bar spans last run → next cron boundary. After a manual refresh that
@@ -149,6 +161,7 @@ onBeforeUnmount(() => {
 
 <template>
   <component
+    v-if="visible"
     :is="rootTag"
     v-bind="large ? {} : { 'to': '/stats', 'aria-label': 'View catalog stats' }"
     class="sync"
