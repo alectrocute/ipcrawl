@@ -21,5 +21,5 @@ export type FrameSource
 // After this many consecutive Shodan stills (200 or 304), pollers stop — the
 // frame cannot change until the daily refresh, so further polls only burn edge
 // requests. Was 5; lowered after post-HN traffic showed most cams settle fast.
-export const SHODAN_BACKOFF_AFTER = 2
+export const SHODAN_BACKOFF_AFTER = 4
 export const EXPLORE_FRAME_POLL_MS = 3000
