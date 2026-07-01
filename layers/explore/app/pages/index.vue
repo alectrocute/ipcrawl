@@ -270,7 +270,7 @@ useSeoMeta({
 
       <div class="explore__layout">
         <aside class="explore__sidebar">
-          <ExploreSyncCountdown :only-within-ms="2 * 60 * 60 * 1000" />
+          <ExploreSyncCountdown :only-within-ms="4 * 60 * 60 * 1000" />
           <ExploreAboutCard />
           <ImceCtaCard />
           <div class="explore__sidebar-card">
