@@ -17,7 +17,7 @@ defineOptions({ name: 'ImceCtaCard' })
         name="i-lucide-scan-eye"
         class="imce-cta__icon"
       />
-      <span class="imce-cta__title">Am I Being Watched?</span>
+      <span class="imce-cta__title">Is My Camera Exposed?</span>
     </div>
 
     <p class="imce-cta__sub">
