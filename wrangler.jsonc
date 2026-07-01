@@ -127,6 +127,12 @@
     // Worker actually receives that host's traffic.
     "NUXT_PUBLIC_IMCE_DOMAIN": "ismycameraexposed.com"
 	},
+	// Wrangler defaults workers_dev to false when `routes` is set, which makes
+	// deploy list/sync zone Workers Routes via /zones/.../workers/routes. That
+	// needs broad Zone permissions on the API token and makes account-scoped CI
+	// tokens fail after a successful upload. Custom domains still deploy through
+	// the script domains API; workers.dev stays available too.
+	"workers_dev": true,
 	// Attach the IMCE marketing domain to this Worker. Uncomment and set the
 	// zone once the domain is registered in this Cloudflare account; with
 	// `custom_domain: true`, Cloudflare provisions the cert and routes the apex
