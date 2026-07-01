@@ -26,7 +26,7 @@ const countLabel = computed(() => (truncated.value ? `${count.value}+` : `${coun
 
 const headline = computed(() =>
   found.value
-    ? `${countLabel.value} ${count.value === 1 ? 'camera' : 'cameras'} nearby are visible online`
+    ? `Exposed cameras found nearby you!`
     : 'No exposed cameras found nearby'
 )
 
@@ -53,9 +53,8 @@ const nearestSuffix = computed(() =>
       v-if="found"
       class="imce-result__lede"
     >
-      <strong>{{ countLabel }}</strong>
-      {{ count === 1 ? 'camera' : 'cameras' }} within <strong>{{ radiusLabel }}</strong>
-      of you are reachable on the internet.{{ nearestSuffix }}
+      It looks like <strong>{{ countLabel }} {{ count === 1 ? 'camera' : 'cameras' }}</strong> within <strong>{{ radiusLabel }}</strong>
+      of you {{ count === 1 ? 'is' : 'are' }} exposed to the public internet. {{ nearestSuffix }}
     </p>
     <p
       v-else
