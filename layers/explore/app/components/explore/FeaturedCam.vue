@@ -5,8 +5,10 @@ import { EXPLORE_FEED_BADGE_LABEL } from '../../utils/feedBadge'
 
 interface Props {
   card: ExploreCamCard
+  /** When true, stop live polling (e.g. the single-cam dialog owns the feed). */
+  pauseLive?: boolean
 }
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), { pauseLive: false })
 const emit = defineEmits<{ select: [card: ExploreCamCard] }>()
 
 const label = computed(() => props.card.location || 'Unknown location')
@@ -19,7 +21,7 @@ const { liveSrc, frameErrored } = useLiveFramePoller(
     id: props.card.id,
     live: apiLiveFramePath(props.card.id)
   }) as ExploreCamDetail,
-  () => true
+  () => !props.pauseLive
 )
 
 // Crossfade: the cached still paints instantly on the front layer; each live

@@ -286,6 +286,7 @@ useSeoMeta({
           <ExploreFeaturedCam
             v-if="featured"
             :card="featured"
+            :pause-live="dialog.open.value"
             @select="card => dialog.openCam(card.id)"
           />
           <ExploreCamGrid

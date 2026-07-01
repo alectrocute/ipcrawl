@@ -197,21 +197,22 @@ export function useLiveFramePoller(
     startPolling()
   }
 
-  // `immediate` covers deep links (?cam=... on first paint): `active` is
-  // already true when this watcher registers, so without it the poller would
-  // never start. `begin()` no-ops on the server, and on the client the watcher
-  // runs during hydration setup, which is exactly when we want the first fetch.
-  watch(active, (on) => {
-    if (on) begin()
-    else {
-      stopPolling()
-      reset()
-    }
-  }, { immediate: true })
-  // Cam changed while the dialog stays open: start over for the new feed.
-  watch(() => detail()?.id, (id) => {
-    if (id && active()) begin()
-  })
+  // One watcher for activate/deactivate and cam switches. `active()` alone
+  // isn't enough — the hero can stay active while `card.id` changes — so key
+  // off the detail id when active, null when not. `immediate` covers deep
+  // links (?cam=... on first paint) where we're already active at setup.
+  watch(
+    () => (active() ? detail()?.id ?? null : null),
+    (id, prevId) => {
+      if (!id) {
+        stopPolling()
+        reset()
+        return
+      }
+      if (id !== prevId) begin()
+    },
+    { immediate: true }
+  )
 
   onMounted(() => {
     document.addEventListener('visibilitychange', handleVisibility)
