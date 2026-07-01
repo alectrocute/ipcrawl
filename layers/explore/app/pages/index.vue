@@ -179,6 +179,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onArrowKeys))
 // --- Sidebar (rendered twice: desktop aside + mobile slideover) -----------------
 const mobileFiltersOpen = ref(false)
 
+function openMobileFilters() {
+  mobileFiltersOpen.value = true
+}
+
 const sidebarBindings = computed(() => ({
   'source': source.value,
   'sort': sort.value,
@@ -248,7 +252,7 @@ useSeoMeta({
             color="neutral"
             variant="subtle"
             size="sm"
-            @click="mobileFiltersOpen = true"
+            @click="openMobileFilters"
           >
             <UIcon
               name="i-lucide-sliders-horizontal"
