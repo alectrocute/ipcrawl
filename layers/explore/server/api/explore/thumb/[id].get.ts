@@ -5,13 +5,15 @@ import { findCam, getScreenshotBytes, type CamMeta } from '~~/server/utils/camSt
 import { defaultEdgeCache, edgeCacheKeyFor, type EdgeRuntimeContext } from '~~/server/utils/edgeCache'
 import { getCamScreenshotMime } from '~~/server/utils/exploreStore'
 import { CACHE_CONTROL, contentEtag, etagMatches, HTTP_HEADER, setNotModified } from '~~/server/utils/httpCache'
+import { assertThumbRateLimit } from '~~/server/utils/thumbRateLimit'
 
 /**
  * Grid thumbnail: serves the cached R2 still ONLY — it never triggers a live
  * probe and isn't behind the live rate limiter. That's the whole point of the
  * split (see Plan 2 open questions): the grid can fan out many cards cheaply
  * because each thumbnail is just heavily-cached bytes, while the dialog's live
- * view uses the stricter `/api/live/[id]` path.
+ * view uses the stricter `/api/live/[id]` path. Origin misses are rate-limited
+ * per IP (see THUMB_* limiters in wrangler.jsonc) to stop strip-miners.
  *
  * Shielded by the Workers Cache API (caches.default), keyed by the stable
  * per-cam URL. Without it, every fresh grid render fired one R2 GetObject (and
@@ -56,6 +58,9 @@ export default defineEventHandler(async (event: H3Event) => {
       })
     }
   }
+
+  // Origin miss — meter scrapers before D1/R2. Edge hits above never reach here.
+  await assertThumbRateLimit(event)
 
   // Prefer the shared D1-backed cam lookup; fall back to the mime-only helper so
   // a partial row can still serve a retained R2 thumbnail.

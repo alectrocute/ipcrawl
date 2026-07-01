@@ -6,8 +6,7 @@ import {
   FRAME_SOURCE_HEADER,
   FRAME_SOURCE_LIVE,
   FRAME_SOURCE_SHODAN,
-  SHODAN_BACKOFF_AFTER,
-  SLOW_FRAME_POLL_MS
+  SHODAN_BACKOFF_AFTER
 } from '#shared/liveFrame'
 
 // Bucket the `?t=` cache key to the poll interval so every viewer of the
@@ -99,7 +98,10 @@ export function useLiveFramePoller(
       // when the still is unchanged (the typical non-live case).
       const frameSource = res.headers.get(FRAME_SOURCE_HEADER)
       if (frameSource === FRAME_SOURCE_LIVE) shodanStreak = 0
-      else if (frameSource === FRAME_SOURCE_SHODAN) shodanStreak++
+      else if (frameSource === FRAME_SOURCE_SHODAN) {
+        shodanStreak++
+        if (shodanStreak >= SHODAN_BACKOFF_AFTER) stopPolling()
+      }
       // Surface the frame's provenance for the consumer's badge. Valid on both
       // a 200 (new frame) and a 304 (the unchanged frame still has this source).
       if (isCurrent() && (frameSource === FRAME_SOURCE_LIVE || frameSource === FRAME_SOURCE_SHODAN)) {
@@ -134,10 +136,14 @@ export function useLiveFramePoller(
   function poll() {
     const d = detail()
     if (!d) return
+    if (shodanStreak >= SHODAN_BACKOFF_AFTER) {
+      stopPolling()
+      return
+    }
     // Back off once the feed has settled on the static still. The URL bucket
     // stays POLL_MS-based so viewers in the same window keep sharing one
     // edge-cache entry regardless of their local cadence.
-    const interval = shodanStreak >= SHODAN_BACKOFF_AFTER ? SLOW_FRAME_POLL_MS : POLL_MS
+    const interval = POLL_MS
     if (Date.now() - lastFetchAt < interval) return
     const bucket = Math.floor(Date.now() / POLL_MS)
     if (bucket === lastBucket) return
@@ -155,7 +161,15 @@ export function useLiveFramePoller(
   function startPolling() {
     stopPolling()
     if (!import.meta.client) return
+    if (document.hidden) return
+    if (shodanStreak >= SHODAN_BACKOFF_AFTER) return
     timer = setInterval(poll, POLL_MS)
+  }
+
+  function handleVisibility() {
+    if (!active()) return
+    if (document.hidden) stopPolling()
+    else startPolling()
   }
 
   function reset() {
@@ -199,7 +213,12 @@ export function useLiveFramePoller(
     if (id && active()) begin()
   })
 
+  onMounted(() => {
+    document.addEventListener('visibilitychange', handleVisibility)
+  })
+
   onScopeDispose(() => {
+    document.removeEventListener('visibilitychange', handleVisibility)
     stopPolling()
     reset()
   })

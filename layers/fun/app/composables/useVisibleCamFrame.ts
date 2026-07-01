@@ -5,8 +5,7 @@ import {
   FRAME_SOURCE_HEADER,
   FRAME_SOURCE_LIVE,
   FRAME_SOURCE_SHODAN,
-  SHODAN_BACKOFF_AFTER,
-  SLOW_FRAME_POLL_MS
+  SHODAN_BACKOFF_AFTER
 } from '#shared/liveFrame'
 
 interface UseVisibleCamFrameOptions {
@@ -54,14 +53,12 @@ export function useVisibleCamFrame(
 
   function poll() {
     if (showStatic.value || !current.value) return
+    if (shodanStreak >= SHODAN_BACKOFF_AFTER) {
+      stopPolling()
+      return
+    }
     const cam = current.value
-    // Back off once the feed has settled on the static still — see
-    // SHODAN_BACKOFF_AFTER. The URL bucket stays interval-based so viewers
-    // in the same window keep sharing one edge-cache entry.
-    const interval = shodanStreak >= SHODAN_BACKOFF_AFTER
-      ? SLOW_FRAME_POLL_MS
-      : pollIntervalMs
-    if (Date.now() - lastPollAt < interval) return
+    if (Date.now() - lastPollAt < pollIntervalMs) return
     const nextBucket = bucket()
     if (nextBucket === frameBucket.value) return
     frameBucket.value = nextBucket
@@ -76,6 +73,7 @@ export function useVisibleCamFrame(
     // probing disabled globally), so the frame can only change on the daily
     // refresh — an interval here would re-request the same still forever.
     if (current.value.liveProbeActive === false) return
+    if (shodanStreak >= SHODAN_BACKOFF_AFTER) return
     // Don't burn requests while the tab is hidden; the visibilitychange
     // handler restarts polling when the viewer comes back.
     if (document.hidden) return
@@ -120,7 +118,10 @@ export function useVisibleCamFrame(
       // when the still is unchanged (the typical non-live case).
       const frameSource = response.headers.get(FRAME_SOURCE_HEADER)
       if (frameSource === FRAME_SOURCE_LIVE) shodanStreak = 0
-      else if (frameSource === FRAME_SOURCE_SHODAN) shodanStreak++
+      else if (frameSource === FRAME_SOURCE_SHODAN) {
+        shodanStreak++
+        if (shodanStreak >= SHODAN_BACKOFF_AFTER) stopPolling()
+      }
       // 304: the frame on screen is still current — keep it.
       if (response.status === 304) {
         settle()

@@ -14,12 +14,18 @@ export interface RateLimitEnv {
   FAV_RATE_LIMITER?: RateLimitBinding
   /** Expensive live frame path; this one fails closed in its endpoint. */
   LIVE_RATE_LIMITER?: RateLimitBinding
+  /** Grid thumbnail origin misses from same-site `<img>` loads. */
+  THUMB_RATE_LIMITER?: RateLimitBinding
+  /** Direct/cross-site thumb fetches (no Sec-Fetch-Site, curl, hotlinks). */
+  THUMB_HOTLINK_RATE_LIMITER?: RateLimitBinding
 }
 
 export const RATE_LIMIT_BINDINGS = {
   api: 'API_RATE_LIMITER',
   favorites: 'FAV_RATE_LIMITER',
-  live: 'LIVE_RATE_LIMITER'
+  live: 'LIVE_RATE_LIMITER',
+  thumb: 'THUMB_RATE_LIMITER',
+  thumbHotlink: 'THUMB_HOTLINK_RATE_LIMITER'
 } as const satisfies Record<string, keyof RateLimitEnv>
 
 export type RateLimitBindingName = keyof RateLimitEnv

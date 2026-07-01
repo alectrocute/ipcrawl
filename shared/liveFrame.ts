@@ -18,6 +18,8 @@ export type FrameSource
     | typeof FRAME_SOURCE_THUMB
     | typeof FRAME_SOURCE_CACHE
 
-export const SHODAN_BACKOFF_AFTER = 5
-export const SLOW_FRAME_POLL_MS = 30_000
+// After this many consecutive Shodan stills (200 or 304), pollers stop — the
+// frame cannot change until the daily refresh, so further polls only burn edge
+// requests. Was 5; lowered after post-HN traffic showed most cams settle fast.
+export const SHODAN_BACKOFF_AFTER = 2
 export const EXPLORE_FRAME_POLL_MS = 3000

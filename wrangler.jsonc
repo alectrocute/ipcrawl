@@ -75,6 +75,31 @@
 			}
 		},
 		{
+			// Grid thumbnails — origin misses only (edge cache shields hits). A page
+			// paints up to 24 cards at once plus scroll/pagination headroom; 50 / 10s
+			// covers that while stopping strip-miners hammering unique ids. Legitimate
+			// `<img>` loads send Sec-Fetch-Dest: image + Sec-Fetch-Site: same-origin
+			// (referrer is stripped client-side); scrapers without those headers fall
+			// through to THUMB_HOTLINK_RATE_LIMITER below.
+			"name": "THUMB_RATE_LIMITER",
+			"namespace_id": "1004",
+			"simple": {
+				"limit": 50,
+				"period": 10
+			}
+		},
+		{
+			// Direct fetches, curl, and cross-site hotlinks — the no-referer burst
+			// pattern from thumb scrapers. Same edge-cache-first shape as above but
+			// a much tighter origin budget.
+			"name": "THUMB_HOTLINK_RATE_LIMITER",
+			"namespace_id": "1005",
+			"simple": {
+				"limit": 8,
+				"period": 10
+			}
+		},
+		{
 			// Favorite votes — the only client-triggered D1 *write* path.
 			// Dedupe per (cam, IP) already bounds the damage; this bounds the
 			// write throughput too (a toggle war is 2 writes per flip).
