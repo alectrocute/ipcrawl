@@ -1,0 +1,14 @@
+# Oneshot invoked by ipcrawl-backup.timer. Snapshots the data volume.
+[Unit]
+Description=ipcrawl nightly data backup
+After=ipcrawl.service
+
+[Service]
+Type=oneshot
+User=ipcrawl
+Group=ipcrawl
+EnvironmentFile=/srv/ipcrawl/env
+ExecStart=/srv/ipcrawl/backup.sh
+# Backups only write into the data/backups tree.
+ProtectSystem=strict
+ReadWritePaths=/srv/ipcrawl/data /srv/ipcrawl/backups

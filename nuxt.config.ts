@@ -1,6 +1,12 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 declare const process: { env: Record<string, string | undefined> }
 
+// True when building for a plain Node server (VPS) instead of Cloudflare
+// Workers. Storage backends differ: Workers binds KV/R2, node-server uses
+// SSD-backed fs drivers rooted at NUXT_DATA_DIR (default ./.data).
+const isNodeServer = process.env.NITRO_PRESET === 'node-server'
+const dataDir = process.env.NUXT_DATA_DIR || './.data'
+
 export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
@@ -175,18 +181,39 @@ export default defineNuxtConfig({
       '0 0 * * *': ['cams:refresh']
     },
 
-    // Production storage — bound to Cloudflare KV for livepersist gates and R2
-    // for screenshot bytes (~50KB each). Bindings are declared in wrangler.
-    storage: {
-      cams: {
-        driver: 'cloudflareKVBinding',
-        binding: 'CAMS_KV'
-      },
-      screenshots: {
-        driver: 'cloudflareR2Binding',
-        binding: 'SCREENSHOTS_R2'
-      }
-    },
+    // Production storage.
+    //
+    // - Cloudflare build: KV for livepersist gates + refresh run log, R2 for
+    //   screenshot bytes (~50KB each). Bindings are declared in wrangler.
+    // - node-server build (VPS): fs drivers on the local SSD, rooted at
+    //   NUXT_DATA_DIR. The `cache` mount backs Nitro's route-rule SWR cache so
+    //   it survives service restarts (on Workers it lives in the Cache API /
+    //   memory instead).
+    storage: isNodeServer
+      ? {
+          cams: {
+            driver: 'fs',
+            base: `${dataDir}/cams`
+          },
+          screenshots: {
+            driver: 'fs',
+            base: `${dataDir}/screenshots`
+          },
+          cache: {
+            driver: 'fs',
+            base: `${dataDir}/cache`
+          }
+        }
+      : {
+          cams: {
+            driver: 'cloudflareKVBinding',
+            binding: 'CAMS_KV'
+          },
+          screenshots: {
+            driver: 'cloudflareR2Binding',
+            binding: 'SCREENSHOTS_R2'
+          }
+        },
 
     // Dev-only fallback — fs-backed storage so `npm run dev` works without
     // Cloudflare bindings or a remote KV/R2 round trip.

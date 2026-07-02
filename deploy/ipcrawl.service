@@ -1,0 +1,40 @@
+# ipcrawl Nitro node-server, managed by systemd.
+#
+# Install to /etc/systemd/system/ipcrawl.service (setup-vps.sh does this), then:
+#   systemctl daemon-reload && systemctl enable --now ipcrawl
+#
+# The daily cams:refresh runs inside this long-lived process via Nitro's
+# scheduledTasks scheduler, so no separate cron/timer is needed for the refresh.
+
+[Unit]
+Description=ipcrawl (Nuxt/Nitro node-server)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ipcrawl
+Group=ipcrawl
+WorkingDirectory=/srv/ipcrawl
+EnvironmentFile=/srv/ipcrawl/env
+ExecStart=/usr/bin/node /srv/ipcrawl/app/server/index.mjs
+Restart=on-failure
+RestartSec=2
+# Give the daily refresh room; it parses tens of MB of Shodan JSON.
+TimeoutStopSec=30
+
+# --- Hardening --------------------------------------------------------------
+# The process only ever needs to write its data volume; everything else is
+# read-only or hidden.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+ReadWritePaths=/srv/ipcrawl/data
+
+[Install]
+WantedBy=multi-user.target

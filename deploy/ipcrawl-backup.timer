@@ -1,0 +1,10 @@
+# Runs the nightly backup at 03:30 UTC (well clear of the 00:00 UTC refresh).
+[Unit]
+Description=Run ipcrawl data backup nightly
+
+[Timer]
+OnCalendar=*-*-* 03:30:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

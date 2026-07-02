@@ -12,7 +12,7 @@ import { defaultEdgeCache, edgeCacheKeyFor, type EdgeRuntimeContext } from '../.
 import { CACHE_CONTROL, contentEtag, etagMatches, HTTP_HEADER, setNotModified } from '../../utils/httpCache'
 import { getLiveFrame } from '../../utils/liveSnapshot'
 import { getOpsSwitchState } from '../../utils/opsSwitch'
-import { RATE_LIMIT_BINDINGS, type RateLimitEnv } from '../../utils/rateLimit'
+import { getClientIp, isFallbackLimited, RATE_LIMIT_BINDINGS, type RateLimitEnv } from '../../utils/rateLimit'
 
 /**
  * Best-effort live frame endpoint. Expensive work is protected by Workers
@@ -82,6 +82,14 @@ export default defineEventHandler(async (event) => {
     }
   } else if (limiter && !clientIp) {
     allowLive = false
+  } else {
+    // No binding (node-server / VPS): meter through the in-process sliding
+    // window instead of running unlimited. Over the cap we skip the probe and
+    // serve the cached screenshot, same graceful degradation as on Workers.
+    const ip = getClientIp(event)
+    if (ip === 'unknown' || isFallbackLimited(RATE_LIMIT_BINDINGS.live, `live:${ip}`)) {
+      allowLive = false
+    }
   }
 
   const live = allowLive ? await getLiveFrame(cam, { waitUntil }) : null

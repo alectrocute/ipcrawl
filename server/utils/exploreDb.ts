@@ -91,8 +91,18 @@ const SCHEMA: string[] = [
   )`
 ]
 
-const DEV_DB_PATH = './.data/explore.sqlite'
+const DEFAULT_DB_PATH = './.data/explore.sqlite'
 const DEV_REMOTE_D1_NAME = 'ipcrawl'
+
+/**
+ * Where the SQLite file lives when running under node-server (dev or VPS).
+ * Overridable via NUXT_SQLITE_PATH so production can point at a persistent
+ * data volume (e.g. /srv/ipcrawl/data/explore.sqlite) regardless of the
+ * process working directory. Defaults to the repo-local dev path.
+ */
+function resolveSqlitePath(proc: NodeProcess): string {
+  return proc.env?.NUXT_SQLITE_PATH || DEFAULT_DB_PATH
+}
 
 interface CloudflareEnv { EXPLORE_DB?: ExploreDb }
 
@@ -342,11 +352,23 @@ function getDevDb(): ExploreDb {
   const fs = proc.getBuiltinModule('node:fs') as {
     mkdirSync(path: string, opts: { recursive: boolean }): void
   }
+  const path = proc.getBuiltinModule('node:path') as {
+    dirname(p: string): string
+  }
   const sqlite = proc.getBuiltinModule('node:sqlite') as {
     DatabaseSync: new (path: string) => NodeSqliteDb
   }
-  fs.mkdirSync('./.data', { recursive: true })
-  devDb = new NodeDb(new sqlite.DatabaseSync(DEV_DB_PATH))
+  const dbPath = resolveSqlitePath(proc)
+  fs.mkdirSync(path.dirname(dbPath), { recursive: true })
+  const db = new sqlite.DatabaseSync(dbPath)
+  // WAL lets the read-heavy viewer traffic keep serving while the daily
+  // refresh writes in a long burst (default journal mode would block readers
+  // for the duration of each write transaction). NORMAL sync is the standard
+  // durable-enough pairing for WAL.
+  db.exec('PRAGMA journal_mode = WAL')
+  db.exec('PRAGMA synchronous = NORMAL')
+  db.exec('PRAGMA busy_timeout = 5000')
+  devDb = new NodeDb(db)
   return devDb
 }
 
