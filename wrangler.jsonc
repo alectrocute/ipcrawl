@@ -76,26 +76,39 @@
 		},
 		{
 			// Grid thumbnails — origin misses only (edge cache shields hits). A page
-			// paints up to 24 cards at once plus scroll/pagination headroom; 50 / 10s
-			// covers that while stopping strip-miners hammering unique ids. Legitimate
-			// `<img>` loads send Sec-Fetch-Dest: image + Sec-Fetch-Site: same-origin
-			// (referrer is stripped client-side); scrapers without those headers fall
-			// through to THUMB_HOTLINK_RATE_LIMITER below.
+			// paints up to 24 cards at once plus scroll/pagination headroom. Raised
+			// from 50 with the post-HN traffic: cold-cache misses (right after a
+			// deploy, evicted entries, or less-popular cam ids) all count against
+			// the per-IP budget, and two users behind one cf-connecting-ip (office
+			// NAT, mobile CGNAT) painting a grid simultaneously will burn ~48 of a
+			// 50 budget in one paint. 150 / 10s covers ~6 cold page-paints or a
+			// few NAT-shared viewers while still stopping strip-miners hammering
+			// unique ids — thumb origin misses are cheap (R2 read + D1 lookup, no
+			// upstream probe) and the edge cache absorbs the vast majority of
+			// volume, so the higher cap costs almost nothing. Legitimate `<img>`
+			// loads send Sec-Fetch-Dest: image + Sec-Fetch-Site: same-origin
+			// (referrer is stripped client-side); scrapers without those headers
+			// fall through to THUMB_HOTLINK_RATE_LIMITER below.
 			"name": "THUMB_RATE_LIMITER",
 			"namespace_id": "1004",
 			"simple": {
-				"limit": 50,
+				"limit": 150,
 				"period": 10
 			}
 		},
 		{
 			// Direct fetches, curl, and cross-site hotlinks — the no-referer burst
 			// pattern from thumb scrapers. Same edge-cache-first shape as above but
-			// a much tighter origin budget.
+			// a much tighter origin budget. Raised from 8: the original cap tripped
+			// on any legitimate client whose headers fall into this bucket (direct
+			// nav to a thumb URL, prefetch/prerender hints, proxies/extensions that
+			// strip Sec-Fetch-*). 20 / 10s is still tight enough to choke
+			// strip-mining but no longer bites a single user clicking through a
+			// handful of unique ids directly.
 			"name": "THUMB_HOTLINK_RATE_LIMITER",
 			"namespace_id": "1005",
 			"simple": {
-				"limit": 8,
+				"limit": 20,
 				"period": 10
 			}
 		},
