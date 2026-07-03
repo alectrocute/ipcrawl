@@ -140,17 +140,18 @@ jobs:
 
       - name: Deploy to VPS
         env:
-          SSH_IP: ${{ vars.SSH_IP }}
+          SSH_IP: ${{ secrets.SSH_IP }}
           SSH_USER: ${{ vars.SSH_USER }}
           SSH_PASS: ${{ secrets.SSH_PASS }}
         run: |
+          echo "::add-mask::$SSH_IP"
           sudo apt-get install -y -qq sshpass
           export SSHPASS="$SSH_PASS"
           SSH_OPTS="-o StrictHostKeyChecking=no -o ServerAliveInterval=30"
           TARGET="${SSH_USER}@${SSH_IP}"
           APP_ROOT=/srv/ipcrawl
 
-          echo "==> Shipping .output/ to ${TARGET}:${APP_ROOT}/app"
+          echo "==> Shipping .output/ to VPS"
           sshpass -e rsync -az --delete -e "ssh $SSH_OPTS" \
             .output/ \
             "${TARGET}:${APP_ROOT}/app/"
