@@ -253,10 +253,10 @@ async function copy(text: string, key: string) {
                 <span class="api-result__label">
                   <template v-if="resultError">{{ resultError }}</template>
                   <template v-else-if="result?.found">
-                    Your IP <code>{{ result.ip }}</code> appears in the catalogue.
+                    Your IP <code :title="result.ip">{{ result.ip }}</code> appears in the catalogue.
                   </template>
                   <template v-else>
-                    Your IP <code>{{ result?.ip ?? 'unknown' }}</code> is not in the catalogue.
+                    Your IP <code :title="result?.ip ?? 'unknown'">{{ result?.ip ?? 'unknown' }}</code> is not in the catalogue.
                   </template>
                 </span>
                 <span
@@ -669,6 +669,17 @@ async function copy(text: string, key: string) {
   background: rgb(var(--phosphor-rgb) / 0.08);
   padding: 1px 5px;
   border-radius: 4px;
+  /* A full IPv6 can hit 39 chars and would blow out the result row inline.
+     Truncate with ellipsis; the full address is preserved in the title
+     attribute (hover) and in the raw JSON block below. `min(22ch, 100%)`
+     caps at 22 chars on wide viewports and at the flex item's width on
+     narrow ones so the chip never overflows its row. */
+  display: inline-block;
+  max-width: min(22ch, 100%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .api-result__raw {

@@ -1,14 +1,16 @@
 /**
  * Custom-domain front door for the "Is My Camera Exposed?" campaign.
  *
- * When `NUXT_PUBLIC_IMCE_DOMAIN` is set (e.g. "ismycameraexposed.com") and a
- * request arrives on that host's root, redirect it to `/imce` so the marketing
- * domain lands straight on the scan. Everything else — the primary site, the
- * API, assets, and `/imce` itself — passes through untouched, so this is a
- * cheap host check on the hot path, not a rewrite layer.
+ * When `NUXT_PUBLIC_IMCE_DOMAIN` is set (e.g. "ismycameraexposed.com"), that
+ * host is reserved for the campaign's one public API route — `/api/ip`. Every
+ * other path (the root, `/imce`, `/map`, other API routes, assets, deep links)
+ * redirects to the IMCE scan page on the primary site (`${siteUrl}/imce`) so
+ * the marketing domain can't be used to browse the catalogue, map, or fun
+ * layers — it's the API surface, not a mirror of the app.
  *
- * To activate: point the domain at this server and set the env var. Empty (the
- * default) makes this middleware a no-op.
+ * The host check runs first and cheaply so non-IMCE hosts (the primary site,
+ * local dev) pass through untouched. Empty `imceDomain` (the default) makes
+ * the whole middleware a no-op.
  */
 export default defineEventHandler((event) => {
   const domain = useRuntimeConfig(event).public.imceDomain
@@ -21,10 +23,15 @@ export default defineEventHandler((event) => {
   const bareHost = host.split(':')[0]?.toLowerCase()
   if (bareHost !== String(domain).toLowerCase()) return
 
-  // Only the root redirects; deep links (and /imce) stay where they are so the
-  // redirect can't loop or trap API/asset requests.
+  // `/api/ip` is the single route that lives on this host — let it through so
+  // the handler (which itself 404s on other hosts) owns the response.
   const { pathname } = getRequestURL(event)
-  if (pathname === '/' || pathname === '') {
-    return sendRedirect(event, '/imce', 302)
-  }
+  if (pathname === '/api/ip') return
+
+  // Everything else bounces to the IMCE scan page on the primary site. Fall
+  // back to a relative `/imce` when `siteUrl` isn't configured (e.g. local
+  // dev where the middleware is effectively a no-op anyway).
+  const siteUrl = useRuntimeConfig(event).public.siteUrl
+  const target = siteUrl ? `${String(siteUrl).replace(/\/$/, '')}/imce` : '/imce'
+  return sendRedirect(event, target, 302)
 })
