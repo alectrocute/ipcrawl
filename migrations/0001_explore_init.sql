@@ -3,7 +3,7 @@
 -- fast. Mirrored verbatim in `server/utils/exploreDb.ts` (SCHEMA), which runs
 -- the same statements IF NOT EXISTS on first access so a fresh DB self-heals.
 --
--- Apply with: wrangler d1 migrations apply ipcrawl [--remote]
+-- Schema is also bootstrapped at runtime (see server/utils/exploreDb.ts).
 
 CREATE TABLE IF NOT EXISTS cams (
   id              TEXT PRIMARY KEY,          -- shortHash(ip:port), shared with the roulette

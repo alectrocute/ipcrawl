@@ -20,10 +20,10 @@ import { readBooleanFlag } from './runtimeFlags'
  * Frames are cached for `liveFrameCache` so a swarm of polling viewers
  * doesn't melt the upstream camera, and concurrent fetches are deduped
  * through a single in-flight Promise — there is at most one probe and one
- * fetch in flight per cam id per isolate at any time.
+ * fetch in flight per cam id at any time.
  *
- * Fresh frames can be written back to R2. A local throttle avoids hot-looping
- * KV, and a KV marker bounds write-through across isolates.
+ * Fresh frames can be written back to storage. A local throttle avoids
+ * hot-looping, and a storage marker bounds write-through frequency.
  *
  * Anything we can't reach quietly falls back to the cached Shodan screenshot
  * (handled at the endpoint level), so the UI never stalls.
@@ -48,18 +48,17 @@ interface CamLiveState {
   lastFrameMime?: string
   lastFrameAt?: number
   persistCheckedAt?: number
-  // The snapshot path whose live state we've already mirrored to D1
-  // (is_live=1, live_path=path) in this isolate. A confirmed-live fetch only
-  // writes when this doesn't match the path it just pulled, so the steady
-  // state — probe (or cold-cache hydrate) already synced this path — costs
-  // zero extra D1 writes.
+  // The snapshot path whose live state we've already mirrored to the DB
+  // (is_live=1, live_path=path). A confirmed-live fetch only writes when this
+  // doesn't match the path it just pulled, so the steady state — probe (or
+  // cold-cache hydrate) already synced this path — costs zero extra DB writes.
   liveSyncedPath?: string
-  // Set once per isolate the first time we skip a non-HTTP cam, so the
-  // "skipping" diagnostic only fires once instead of on every poll.
+  // Set once the first time we skip a non-HTTP cam, so the "skipping"
+  // diagnostic only fires once instead of on every poll.
   skipLogged?: boolean
 }
 
-// Bounded LRU: a long-lived isolate that touches thousands of cams would
+// Bounded LRU: a long-lived process that touches thousands of cams would
 // otherwise accumulate a frame buffer (~50KB) per cam forever. 256 entries
 // caps worst-case retained frames at ~13MB.
 const MAX_TRACKED_CAMS = 256
@@ -82,13 +81,10 @@ function getState(id: string): CamLiveState {
   return s
 }
 
-// --- Durable probe cache (D1) -----------------------------------------------
+// --- Durable probe cache (SQLite) --------------------------------------------
 //
-// The in-memory `states` Map only spans one isolate. On Workers each request
-// may land in a different isolate, so without a durable cache every cold
-// isolate would re-probe — wasting time on the request and racing other
-// isolates for the same upstream camera. We persist the probe result in the
-// cam's D1 row so KV is reserved for live-frame persist gating.
+// Probe results are persisted in the cam's DB row so a server restart doesn't
+// re-probe every cam from scratch.
 
 interface ProbeCacheEntry { path: string | null, at: number }
 interface PersistGateEntry { at: number }
@@ -106,7 +102,7 @@ async function saveProbeCache(id: string, path: string | null): Promise<boolean>
     await writeLiveProbeCache(id, path)
     return true
   } catch {
-    // D1 unavailable or transient failure — best effort.
+    // DB unavailable or transient failure — best effort.
     return false
   }
 }
@@ -153,13 +149,11 @@ function maybePersistFrame(
 }
 
 /**
- * Confirm a cam's liveness in D1 from an *actually delivered* frame, not just
- * from probe discovery. The probe mirrors `is_live` when it finds a path and a
- * cold isolate hydrates the same marker from the cache row, so this normally
+ * Confirm a cam's liveness in the DB from an *actually delivered* frame, not
+ * just from probe discovery. The probe mirrors `is_live` when it finds a path
+ * and a restart hydrates the same marker from the cache row, so this normally
  * no-ops — it only writes when the in-memory marker doesn't match the path we
- * just fetched (e.g. the probe's own cache write was dropped, leaving a working
- * cam stuck at is_live=0). One write per (isolate, cam, path) transition; zero
- * in steady state. Returns the write promise (for `waitUntil`) or undefined.
+ * just fetched. One write per (cam, path) transition; zero in steady state.
  */
 function maybeMarkLive(
   cam: CamMeta,
@@ -167,9 +161,9 @@ function maybeMarkLive(
   path: string
 ): Promise<void> | undefined {
   if (state.liveSyncedPath === path) return undefined
-  // Optimistic: we're issuing the write now, so dedup concurrent fetches in
-  // this isolate. Roll back only if the write is confirmed to have failed, so
-  // a later fetch retries the correction.
+  // Optimistic: we're issuing the write now, so dedup concurrent fetches.
+  // Roll back only if the write is confirmed to have failed, so a later
+  // fetch retries the correction.
   state.liveSyncedPath = path
   return saveProbeCache(cam.id, path).then((ok) => {
     if (!ok) state.liveSyncedPath = undefined
@@ -198,7 +192,7 @@ function logLiveFetchMissOnce(cam: CamMeta, path: string, reason: string): void 
  * httpGet's own transport timeout: even in the pathological case where a socket
  * read never settles after close()/cancel(), the returned promise still
  * resolves — so a single stuck upstream can never wedge the shared `s.fetching`
- * promise and poison every future poll for a cam in the isolate.
+ * promise and poison every future poll for that cam.
  */
 function withDeadline<T>(p: Promise<T>, ms: number, fallback: T): Promise<T> {
   return new Promise<T>((resolve) => {
@@ -259,7 +253,7 @@ interface LiveFrame {
 
 export interface GetLiveFrameOpts {
   /**
-   * Hand any tail-work (probe discovery, D1 probe-cache write, persist
+   * Hand any tail-work (probe discovery, DB probe-cache write, persist
    * promise) to `ctx.waitUntil` so it survives the response flush. The live
    * endpoint intentionally does not wait for first-time discovery; it returns
    * the cached Shodan still while the probe warms the per-cam path cache.
@@ -271,10 +265,10 @@ export interface GetLiveFrameOpts {
  * Returns a fresh frame from the cam, or null if we can't reach it.
  *
  * Concurrency: at most one probe and one fetch are in flight per cam id per
- * isolate. A swarm of polling viewers shares the same in-flight work, so the
- * upstream camera sees one request even when many viewers are watching the
- * same channel. The discovered snapshot path is mirrored into D1 so other
- * isolates skip the probe entirely on their first request.
+ * A swarm of polling viewers shares the same in-flight work, so the upstream
+ * camera sees one request even when many viewers are watching the same channel.
+ * The discovered snapshot path is mirrored into the DB so a restart skips the
+ * probe entirely.
  *
  * Disabled when `enableLiveProbe` is false — the live endpoint just serves
  * the cached Shodan screenshot then.
@@ -291,9 +285,8 @@ export async function getLiveFrame(
   const s = getState(cam.id)
 
   // Non-HTTP services (RTSP, VNC, ...) get their stills from Shodan but can't
-  // be live-probed from a Worker. Short-circuit before any probe / fetch /
-  // DB work; there's nothing for us to do here and the Shodan-fallback in
-  // the route will serve the cached still.
+  // be live-probed over HTTP. Short-circuit before any probe / fetch / DB work;
+  // the Shodan-fallback in the route will serve the cached still.
   if (!isLiveProbeReachable(cam)) {
     if (!s.skipLogged) {
       s.skipLogged = true
@@ -315,10 +308,9 @@ export async function getLiveFrame(
     }
   }
 
-  // Cold isolate: try to hydrate the snapshot path from D1 before paying the
-  // cost of a fresh probe. Honoring a cached "null" result (within the retry
-  // window) is what stops every cold isolate from independently re-probing
-  // confirmed-dead cameras.
+  // Cold start: try to hydrate the snapshot path from the DB before paying
+  // the cost of a fresh probe. Honoring a cached "null" result (within the
+  // retry window) stops re-probing confirmed-dead cameras after a restart.
   if (s.snapshotPath === undefined && !s.probing) {
     const cached = await loadProbeCache(cam.id)
     if (cached) {
@@ -343,10 +335,9 @@ export async function getLiveFrame(
       s.snapshotPath = path
       s.probedAt = Date.now()
       s.probing = undefined
-      // Mirror to D1 so the next cold isolate doesn't re-probe. Handed to
-      // waitUntil so the response flush can't kill it. Mark the path synced
-      // optimistically so the follow-up fetch doesn't write it again; roll
-      // back only if the write is confirmed to have failed.
+      // Mirror to DB so the next restart doesn't re-probe. Mark the path
+      // synced optimistically so the follow-up fetch doesn't write it again;
+      // roll back only if the write is confirmed to have failed.
       if (path) s.liveSyncedPath = path
       const save = saveProbeCache(cam.id, path).then((ok) => {
         if (!ok && path) s.liveSyncedPath = undefined
@@ -360,9 +351,9 @@ export async function getLiveFrame(
       return null
     })
     s.probing = probePromise
-    // Keep the Worker alive for probe discovery, but do not hold the
-    // /api/live response open. This request falls through to the cached
-    // Shodan still; later polls use `s.snapshotPath` once this Promise lands.
+    // Fire-and-forget probe discovery without holding the /api/live response
+    // open. This request falls through to the cached Shodan still; later
+    // polls use `s.snapshotPath` once this Promise lands.
     opts.waitUntil?.(probePromise.catch(() => {}))
   }
 
@@ -370,13 +361,9 @@ export async function getLiveFrame(
   if (!s.snapshotPath) return null
 
   // Refresh the frame in the BACKGROUND — never block the response on the
-  // upstream camera fetch. That inline await was the dominant source of 504s
-  // and OOM: on a popular-but-slow cam every poll hung 0.6–3s, stacking frame
-  // buffers + sockets per isolate until it brushed the 128MB cap and tipped into
-  // exceededMemory (which kills every in-flight request on the isolate). Now a
-  // poll serves the last good frame (or the Shodan still) immediately and the
-  // fetch warms `s.lastFrame` for the *next* poll, handed to `waitUntil` so it
-  // survives the response flush. Deduped per cam per isolate via `s.fetching`.
+  // upstream camera fetch. A poll serves the last good frame (or the Shodan
+  // still) immediately and the fetch warms `s.lastFrame` for the *next* poll.
+  // Deduped per cam via `s.fetching`.
   if (!s.fetching) {
     const path = s.snapshotPath
     const refresh = fetchFrame(cam, path).then((frame): FetchResult => {
@@ -389,9 +376,9 @@ export async function getLiveFrame(
       s.lastFrameAt = Date.now()
 
       const persist = maybePersistFrame(cam, s, frame, enableLiveFramePersist, s.lastFrameAt)
-      // A delivered frame is the ground truth for liveness — reconcile the D1
+      // A delivered frame is the ground truth for liveness — reconcile the DB
       // row off the actual fetch, not just probe discovery. Deduped per
-      // (isolate, cam, path) so this is a no-op once the path is synced.
+      // (cam, path) so this is a no-op once the path is synced.
       const sync = maybeMarkLive(cam, s, path)
 
       s.fetching = undefined
@@ -407,15 +394,15 @@ export async function getLiveFrame(
       return { frame: null }
     })
     s.fetching = refresh
-    // Keep the isolate alive for the background refresh (and any persist / D1
-    // sync tail it spawns) without holding the response open.
+    // Fire-and-forget the background refresh (and any persist / DB sync tail
+    // it spawns) without holding the response open.
     opts.waitUntil?.(refresh.then(r => r.persist).catch(() => {}))
   }
 
   // Serve the most recent good live frame while it's within the grace window;
   // otherwise fall through to the cached Shodan still (handled by the route).
-  // The grace window also covers the one-poll warm-up after a cold isolate's
-  // first request kicks the background fetch above.
+  // The grace window also covers the one-poll warm-up after the first request
+  // kicks the background fetch above.
   if (s.lastFrame && s.lastFrameAt && Date.now() - s.lastFrameAt < liveFrameGrace) {
     return {
       data: s.lastFrame,

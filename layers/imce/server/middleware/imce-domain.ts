@@ -7,9 +7,8 @@
  * API, assets, and `/imce` itself — passes through untouched, so this is a
  * cheap host check on the hot path, not a rewrite layer.
  *
- * To activate: point the domain at this Worker (a wrangler `route`/custom
- * domain — see wrangler.jsonc) and set the env var. Empty (the default) makes
- * this middleware a no-op.
+ * To activate: point the domain at this server and set the env var. Empty (the
+ * default) makes this middleware a no-op.
  */
 export default defineEventHandler((event) => {
   const domain = useRuntimeConfig(event).public.imceDomain

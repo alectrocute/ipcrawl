@@ -54,8 +54,7 @@ function noteProbeMiss(
 const PROBE_PEEK_BYTES = 8 * 1024
 
 // Per-attempt diagnostic info. Accumulated across every path tried in a
-// single `probeSnapshot` run and rolled up into one summary log line so
-// `wrangler tail` shows the whole failure mode without spamming.
+// single `probeSnapshot` run and rolled up into one summary log line.
 type ProbeResultKind
   = { kind: 'hit' }
     | { kind: 'no-reply', reason: string }
@@ -199,8 +198,7 @@ function logProbeSummary(
  * Discover a working snapshot path for `cam` by racing the path list in
  * small concurrent batches with a global wall-clock budget. The batching
  * keeps the load on the camera bounded; the wall-clock budget guarantees
- * we never blow past Workers' request duration even when every path is
- * a dead end.
+ * we never spin on a dead camera indefinitely.
  */
 export async function probeSnapshot(cam: CamMeta): Promise<string | null> {
   const { liveProbeBudget } = getLiveTimingMs()

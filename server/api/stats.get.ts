@@ -50,16 +50,15 @@ async function loadBuckets(db: ExploreDb, column: string): Promise<StatsBucket[]
   }))
 }
 
-// Per-isolate memo on top of the route-rule SWR: the underlying data only
-// moves on the daily Shodan refresh, so even an edge-cache miss should
-// almost never pay for the three GROUP BY scans twice in the same isolate.
+// In-process memo on top of the route-rule SWR: the underlying data only
+// moves on the daily Shodan refresh.
 const MEMO_TTL = 10 * 60 * 1000
 let memo: { at: number, data: StatsResponse } | null = null
 
 /**
  * Aggregate catalogue stats (totals + top-N breakdowns by country / org /
  * manufacturer) for the /stats charts. Highly cached: `/api/stats` route
- * rule (long SWR), plus the in-isolate memo above. Raw IPs are never touched —
+ * rule (long SWR), plus the in-process memo above. Raw IPs are never touched —
  * everything here is a COUNT over already-public facet columns.
  */
 export default defineEventHandler(async (event): Promise<StatsResponse> => {

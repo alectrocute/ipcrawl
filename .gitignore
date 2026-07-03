@@ -23,11 +23,6 @@ logs
 .env
 .env.*
 !.env.example
-.dev.vars
-!.dev.vars.example
-
-# Wrangler
-.wrangler
 
 # Playwright
 /test-results/

@@ -13,7 +13,7 @@
 -- reappearing cam starts clean. Mirrored in server/utils/exploreDb.ts
 -- (SCHEMA + COLUMN_BACKFILLS + POST_BACKFILL_INDEXES) for dev/self-heal.
 --
--- Apply with: wrangler d1 migrations apply ipcrawl [--remote]
+-- Schema is also bootstrapped at runtime (see server/utils/exploreDb.ts).
 
 ALTER TABLE cams ADD COLUMN fav_count INTEGER NOT NULL DEFAULT 0;
 

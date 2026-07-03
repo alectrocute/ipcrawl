@@ -16,7 +16,7 @@ export interface Cam {
    * Shodan's `_shodan.module` — the scan module that captured the banner
    * (e.g. `http`, `https`, `https-simple-new`, `rtsp`, `webcam`, `vnc`). We
    * keep it on the cam so the live-frame probe can skip cams that aren't
-   * HTTP services (Workers can't speak RTSP or VNC).
+   * HTTP services.
    */
   module?: string
   /**
@@ -126,16 +126,12 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 /**
  * Streams webcams from Shodan via their REST API, yielding one cam at a time.
  *
- * This is a generator (not an array-returning function) on purpose: Cloudflare
- * Workers cap at 128MB, and each `has_screenshot:1` banner carries a base64
- * screenshot blob (tens-to-hundreds of KB, doubled in memory as a JS string).
- * Buffering an entire query — let alone several — blows the limit. By yielding
- * cams as we parse each page, the caller can persist + discard each screenshot,
- * so peak memory stays bounded to roughly one page of banners.
- *
- * Why REST instead of the `shodan` CLI? The CLI shells out to Python, which
- * we can't do on Workers. The REST API returns the same banner shape and runs
- * anywhere `fetch` is available — both Node and Workers.
+ * This is a generator (not an array-returning function) on purpose: each
+ * `has_screenshot:1` banner carries a base64 screenshot blob (tens-to-hundreds
+ * of KB, doubled in memory as a JS string). Buffering an entire query — let
+ * alone several — is wasteful. By yielding cams as we parse each page, the
+ * caller can persist + discard each screenshot, so peak memory stays bounded
+ * to roughly one page of banners.
  */
 export async function* streamCamsForQuery(
   query: string,
@@ -277,7 +273,7 @@ export async function* streamCamsForQuery(
 /**
  * Stable short id from `ip:port`. Prepends a pepper so the hash can't be
  * reversed by enumerating the IPv4×port space. Uses WebCrypto
- * (`crypto.subtle`), available in both modern Node and Cloudflare Workers.
+ * (`crypto.subtle`).
  */
 async function shortHash(input: string, pepper: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${pepper}:${input}`))

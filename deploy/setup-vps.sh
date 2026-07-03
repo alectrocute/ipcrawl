@@ -30,13 +30,6 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
 apt-get install -y ca-certificates curl gnupg ufw nginx sqlite3 rsync
 
-log "Installing rclone (for the R2 -> SSD data sync)"
-if ! command -v rclone >/dev/null 2>&1; then
-  curl -fsSL https://rclone.org/install.sh | bash
-else
-  echo "rclone already installed: $(rclone version | head -n1)"
-fi
-
 # --- Node 22 (NodeSource) ---------------------------------------------------
 log "Installing Node ${NODE_MAJOR} (node:sqlite needs >= 22.5)"
 NEED_NODE=1
@@ -139,10 +132,9 @@ fi
 log "Provisioning done."
 cat <<EOF
 
-Next steps (see deploy/CUTOVER.md for the full runbook):
+Next steps:
   1. Upload /srv/ipcrawl/env  (from deploy/env.example, fill in the secrets)
   2. Upload the Cloudflare origin cert to /etc/ssl/cloudflare/ipcrawl-origin.{pem,key}
      then: nginx -t && systemctl reload nginx
-  3. From your laptop:  ./deploy/migrate-data.sh   (moves D1/R2/KV data over)
-  4. From your laptop:  ./deploy/deploy.sh          (builds + ships the app, starts service)
+  3. From your laptop:  ./deploy/deploy.sh  (builds + ships the app, starts service)
 EOF

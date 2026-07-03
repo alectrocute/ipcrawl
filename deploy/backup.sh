@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 #
 # Nightly local backup of the ipcrawl data volume. Runs on the VPS as the
-# ipcrawl user via ipcrawl-backup.timer. On Cloudflare, D1/R2 were durable by
-# default; on a single VPS, durability is now your job — pair this with an
-# off-box copy (rsync/rclone the resulting tarball elsewhere) for real safety.
+# ipcrawl user via ipcrawl-backup.timer. Pair this with an off-box copy
+# (rsync/rclone the resulting tarball elsewhere) for real safety.
 #
 # Produces, under ${APP_ROOT}/backups:
 #   - explore-<ts>.sqlite  : a consistent sqlite3 .backup snapshot (WAL-safe)

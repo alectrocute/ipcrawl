@@ -19,9 +19,9 @@ export const HTTP_HEADER = {
   ifNoneMatch: 'if-none-match'
 } as const
 
-// Strip weak-validator prefixes before comparing — intermediaries (including
-// Cloudflare) may downgrade strong ETags to weak (`W/"..."`), and a byte-exact
-// comparison would silently disable 304s for those clients.
+// Strip weak-validator prefixes before comparing — intermediaries may
+// downgrade strong ETags to weak (`W/"..."`), and a byte-exact comparison
+// would silently disable 304s for those clients.
 function stripWeak(value: string): string {
   return value.startsWith('W/') ? value.slice(2) : value
 }

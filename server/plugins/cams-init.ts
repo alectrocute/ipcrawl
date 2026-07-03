@@ -9,13 +9,10 @@ import {
 import { readBooleanFlag } from '../utils/runtimeFlags'
 
 /**
- * On cold start: scrub the D1 cam list against the current blocklist so
- * filter changes apply immediately (no need to wait for the next scheduled refresh).
- * If the database is empty, kick off the initial refresh detached so the server
- * keeps accepting requests while the first batch lands.
- *
- * Skipped on Cloudflare — Workers don't have a "boot" the way a long-lived
- * Node process does; refreshing there is exclusively the cron trigger's job.
+ * On cold start: scrub the cam list against the current blocklist so filter
+ * changes apply immediately (no need to wait for the next scheduled refresh).
+ * If the database is empty, kick off the initial refresh detached so the
+ * server keeps accepting requests while the first batch lands.
  */
 export default defineNitroPlugin(() => {
   const config = useRuntimeConfig()

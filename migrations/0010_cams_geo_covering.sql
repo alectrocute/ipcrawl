@@ -10,7 +10,7 @@
 -- Replaces idx_cams_geo from 0005_cams_geo_index.sql. Mirrored in
 -- server/utils/exploreDb.ts (SCHEMA).
 --
--- Apply with: wrangler d1 migrations apply ipcrawl [--remote]
+-- Schema is also bootstrapped at runtime (see server/utils/exploreDb.ts).
 
 DROP INDEX IF EXISTS idx_cams_geo;
 CREATE INDEX IF NOT EXISTS idx_cams_geo ON cams(lat, lon, is_live, id);

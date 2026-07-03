@@ -4,7 +4,7 @@
 -- SHA-256 of the client IP — raw IPs are never stored. Mirrored verbatim in
 -- `server/utils/exploreDb.ts` (SCHEMA) for dev/self-heal.
 --
--- Apply with: wrangler d1 migrations apply ipcrawl [--remote]
+-- Schema is also bootstrapped at runtime (see server/utils/exploreDb.ts).
 
 CREATE TABLE IF NOT EXISTS cam_favorites (
   cam_id     TEXT NOT NULL,

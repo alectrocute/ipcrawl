@@ -18,8 +18,8 @@ const props = withDefaults(defineProps<{
 const NuxtLink = resolveComponent('NuxtLink')
 const rootTag = computed(() => (props.large ? 'aside' : NuxtLink))
 
-// The Shodan sweep runs on a daily cron (`0 0 * * *` in nuxt.config /
-// wrangler), i.e. at fixed UTC wall-clock boundary 00:00. The countdown
+// The Shodan sweep runs on a daily cron (`0 0 * * *` in nuxt.config),
+// i.e. at fixed UTC wall-clock boundary 00:00. The countdown
 // targets the next boundary *after* the last completed run. Anchoring to the
 // cron grid — not lastAt + 24h — keeps the estimate honest after manual
 // refreshes: a manual run at 14:30 doesn't push the next cron sweep to 14:30

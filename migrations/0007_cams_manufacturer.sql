@@ -5,7 +5,7 @@
 -- COLUMN_BACKFILLS), which runs the same statements idempotently on first
 -- access so a fresh / unmigrated DB self-heals.
 --
--- Apply with: wrangler d1 migrations apply ipcrawl [--remote]
+-- Schema is also bootstrapped at runtime (see server/utils/exploreDb.ts).
 
 ALTER TABLE cams ADD COLUMN manufacturer TEXT;
 

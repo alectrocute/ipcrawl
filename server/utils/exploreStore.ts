@@ -25,7 +25,7 @@ import { isLiveProbeActive } from './liveProbeStatus'
  */
 const EXPLORE_RETENTION_MS = 60 * 24 * 60 * 60 * 1000
 
-// D1 caps bound parameters at 100 per statement; each upsert binds 17, so
+// SQLite caps bound parameters at 100 per statement; each upsert binds 17, so
 // 90 statements/batch stays comfortably under the per-batch ceiling while
 // keeping round-trips low on the daily ingest.
 const UPSERT_BATCH = 90
@@ -92,7 +92,7 @@ function rowToCard(row: CamRow): ExploreCamCard {
 // pagination) is recovered with a dedicated COUNT. The two hot, filter-free
 // shapes — the default grid and the `source=live` grid — only change on the daily
 // refresh (a vote never adds or removes a cam), so their counts are memoized
-// per-isolate with a short TTL and dropped on ingest. Filtered queries fall
+// in-process with a short TTL and dropped on ingest. Filtered queries fall
 // back to a plain `COUNT(*)` (no window, no subquery) — far cheaper than the
 // old correlated/windowed count and already shielded by the route SWR cache.
 const TOTAL_CACHE_TTL_MS = 60_000
@@ -169,7 +169,7 @@ ON CONFLICT(id) DO UPDATE SET
     THEN excluded.is_live ELSE cams.is_live END`
 
 /**
- * Batch-upsert the freshly-ingested cam set into D1. `firstSeenAt` is preserved
+ * Batch-upsert the freshly-ingested cam set into the DB. `firstSeenAt` is preserved
  * as the earliest of (existing, incoming); live state is only overwritten for
  * cams we have fresh probe info for (see the CASE/COALESCE in UPSERT_SQL), so
  * cams without fresh probe data keep whatever liveness they had.
@@ -293,7 +293,7 @@ export async function queryCams(
   const offset = Math.max(0, (query.page - 1) * query.pageSize)
   // No `COUNT(*) OVER ()` and no correlated fav_count subquery: together they
   // forced a full scan of every match (plus a cam_favorites scan per row) on
-  // every page — the single worst D1 rows-read offender. `fav_count` is now a
+  // every page — the single worst rows-read offender. `fav_count` is now a
   // denormalized column kept current by setFavorite, so `ORDER BY fav_count
   // DESC, …` is served straight off idx_cams_fav / idx_cams_live_fav and stops
   // at the page boundary. The total is recovered by `countCams` (cached for the

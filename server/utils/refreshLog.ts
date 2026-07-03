@@ -1,11 +1,7 @@
 /**
- * Persistent run history for the `cams:refresh` task, stored in KV (the
- * `cams` namespace) rather than D1 on purpose: the D1 `cam_refresh_meta` row
- * is only written on a *successful* run with results, so it can't tell you
- * about runs that crashed, returned nothing, or never fired. This log records
- * every attempt — start, finish, duration, outcome — so "is the cron actually
- * running?" is answerable from /api/status without digging through the
- * Cloudflare dashboard.
+ * Persistent run history for the `cams:refresh` task, stored in the `cams`
+ * storage namespace. Records every attempt — start, finish, duration,
+ * outcome — so "is the cron actually running?" is answerable from /api/status.
  */
 
 import type { RefreshRunRecord } from '#shared/status'
@@ -16,7 +12,7 @@ const MAX_RUNS = 20
 /**
  * A 'running' record with no heartbeat for this long is presumed dead.
  * Heartbeats land at least every ~60s while the task progresses, so 5 minutes
- * of silence means the isolate was killed (limits, eviction, deploy).
+ * of silence means the process was killed or restarted.
  */
 export const RUN_DEAD_AFTER_MS = 5 * 60 * 1000
 
@@ -38,7 +34,7 @@ function reapDeadRuns(runs: RefreshRunRecord[], now = Date.now()): boolean {
     runs[i] = {
       ...run,
       status: 'error',
-      error: 'never finalized — worker likely killed by CPU/wall-clock limits or evicted mid-run'
+      error: 'never finalized — process likely killed or restarted mid-run'
     }
     changed = true
   }
@@ -124,8 +120,8 @@ export async function listRuns(): Promise<RefreshRunRecord[]> {
     // Self-heal on read: a run killed by the platform never finalizes itself,
     // so the log would otherwise show 'running' forever. The write-back only
     // happens when something was actually reaped (at most a handful of times
-    // per dead run, even across racing isolates — last-write-wins is fine
-    // because every racer marks the same record the same way).
+    // per dead run, even across racing requests — last-write-wins is fine
+    // because every caller marks the same record the same way).
     if (reapDeadRuns(runs)) await writeRuns(runs)
     return runs
   } catch {

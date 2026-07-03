@@ -35,8 +35,8 @@ This project has a mission to secure all open webcams and bring the total number
 | Icons | [Iconify](https://iconify.design/) (Lucide + Simple Icons) |
 | Maps | [Leaflet](https://leafletjs.com/) |
 | Markdown | [marked](https://marked.js.org/) |
-| Runtime | [Cloudflare Workers](https://workers.cloudflare.com/) |
-| Storage | Cloudflare KV, R2, D1 (with Node filesystem/SQLite fallbacks for local dev) |
+| Runtime | Node.js (VPS, systemd + nginx) |
+| Storage | SQLite (node:sqlite) + filesystem |
 | Testing | [Playwright](https://playwright.dev/) (E2E) |
 | CI | GitHub Actions |
 
@@ -52,13 +52,12 @@ pnpm install
 cp .env.example .env
 # Edit .env — add your NUXT_SHODAN_API_KEY
 
-# Start the dev server (Node mode, local SQLite)
+# Start the dev server (local SQLite)
 pnpm run dev
 ```
 
 The dev server runs at `http://localhost:3000`. Storage defaults to the local
-filesystem (`./.data/`), so you can browse the catalogue without Cloudflare
-bindings.
+filesystem (`./.data/`), so you can browse the catalogue locally.
 
 ### Environment Variables
 
@@ -69,7 +68,6 @@ bindings.
 | `NUXT_EDGE_KILL_SWITCH` | `false` | Emergency brake — skips live probes, serves cached screenshots |
 | `NUXT_OFFLINE_FOR_NOW` | `false` | Redirect all traffic to an overload page |
 | `NUXT_ENABLE_LIVE_PROBE` | `false` | Enable live camera frame fetching |
-| `NUXT_DEV_LOCAL_D1` | `false` | Force local SQLite catalogue in dev |
 
 ## Architecture
 
@@ -82,7 +80,7 @@ app/             Root app shell, global theme, error pages
 │   └── map/       Map explorer at /map
 ├── server/        Shared Nitro handlers, camera ingestion, live probing
 ├── shared/        API contracts (shared between client & server)
-└── migrations/    D1 database migrations (10 migrations)
+└── migrations/    Database migrations
 ```
 
 ### Key API Routes
@@ -105,36 +103,19 @@ A scheduled task (`server/tasks/cams/refresh.ts`) runs daily at 00:00 UTC:
 1. Scrub cached cameras against a blocklist
 2. Query Shodan REST API (paginated)
 3. Dedupe by `ip:port`, drop blocked rows
-4. Write screenshot bytes to R2/filesystem
-5. Upsert metadata into D1/SQLite
+4. Write screenshot bytes to filesystem
+5. Upsert metadata into SQLite
 6. Prune stale rows past the retention window
 
 ## Deployment
 
-### Cloudflare Workers
-
-Create the required resources:
-
 ```bash
-npx wrangler kv namespace create IPCRAWL_KV
-npx wrangler r2 bucket create ipcrawl-screenshots
-npx wrangler d1 create ipcrawl
-npx wrangler d1 migrations apply ipcrawl --remote
-npx wrangler secret put NUXT_SHODAN_API_KEY
-```
-
-Wire the printed IDs into `wrangler.jsonc`, then deploy:
-
-```bash
-pnpm run cf:deploy
-```
-
-### Node Server
-
-```bash
-pnpm run build:node
+pnpm run build
 node .output/server/index.mjs
 ```
+
+See `deploy/` for the full VPS provisioning scripts (systemd unit, nginx
+config, backup timer).
 
 ## Contributing
 

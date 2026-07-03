@@ -12,7 +12,7 @@ export function useChannelShareMeta(current: Ref<FunCamChannel | null>) {
   const route = useRoute()
   const runtimeConfig = useRuntimeConfig()
   const requestUrl = useRequestURL()
-  const requestHeaders = useRequestHeaders(['host', 'x-forwarded-host', 'x-forwarded-proto', 'cf-visitor'])
+  const requestHeaders = useRequestHeaders(['host', 'x-forwarded-host', 'x-forwarded-proto'])
 
   const shareTitle = computed(() => current.value
     ? `${current.value.location || 'Unknown Location'} · IP CRAWL Fun`
@@ -40,18 +40,7 @@ export function useChannelShareMeta(current: Ref<FunCamChannel | null>) {
   }
 
   function forwardedProtocol() {
-    const forwardedProto = requestHeaders['x-forwarded-proto']?.split(',')[0]?.trim()
-    if (forwardedProto) return forwardedProto
-
-    const cfVisitor = requestHeaders['cf-visitor']
-    if (!cfVisitor) return undefined
-
-    try {
-      const parsed = JSON.parse(cfVisitor) as { scheme?: string }
-      return parsed.scheme
-    } catch {
-      return undefined
-    }
+    return requestHeaders['x-forwarded-proto']?.split(',')[0]?.trim()
   }
 
   const shareOrigin = computed(() => {

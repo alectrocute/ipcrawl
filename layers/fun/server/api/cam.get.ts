@@ -14,10 +14,10 @@ const HISTORY_MAX_AGE = 60 * 60 * 24 * 30
 const MAX_RECENT_IDS = 60
 const UINT32_RANGE = 0x100000000
 
-// Single-flight guard: if many requests land on an empty camera table simultaneously
-// (very likely the seconds after a fresh Cloudflare deploy), we don't want
-// each one to fire its own refresh and hammer Shodan. The first request
-// owns the refresh; everyone else awaits the same Promise.
+// Single-flight guard: if many requests land on an empty camera table
+// simultaneously, we don't want each one to fire its own refresh and hammer
+// Shodan. The first request owns the refresh; everyone else awaits the same
+// Promise.
 let warming: Promise<CamMeta[]> | null = null
 
 async function ensureCams(): Promise<CamMeta[]> {
@@ -107,9 +107,8 @@ function firstQueryString(value: unknown): string | null {
  * address and screenshot blob never appear in this payload — clients fetch
  * frames separately via /api/live/{id}.jpg.
  *
- * If the camera table is empty (e.g. fresh Cloudflare deploy before the first cron
- * tick), the refresh task runs inline so the very first visitor seeds the
- * database/R2.
+ * If the camera table is empty (e.g. first boot before the first cron tick),
+ * the refresh task runs inline so the very first visitor seeds the database.
  */
 export default defineEventHandler(async (event) => {
   const allCams = await ensureCams()

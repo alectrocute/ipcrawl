@@ -14,9 +14,8 @@ import { upsertCams, pruneCams } from '../../utils/exploreStore'
 import { readCamCounts, writeCamCountSnapshot } from '../../utils/statsSnapshot'
 import { recordRunStart, recordRunFinish, recordRunHeartbeat } from '../../utils/refreshLog'
 
-// Inline queries. We used to load queries.json from disk via fs/promises, but
-// Cloudflare Workers can't read the filesystem at runtime. Keeping the list
-// in code is simpler and edits trigger a redeploy regardless.
+// Inline queries. Keeping the list in code is simpler and edits trigger a
+// redeploy regardless.
 //
 // Strategy: brand-specific queries first for high-quality camera content with
 // reliable live-probe paths, then a keyword sweep, then a broad catch-all with
@@ -85,9 +84,9 @@ function toMeta(
 /**
  * Content fingerprint of a screenshot, hashed over the base64 payload as
  * Shodan delivers it (no decode needed just to compare). Stored in the cam's
- * D1 row so the next refresh can tell "same still" from "new still" and skip
- * the R2 put for the former — Class A writes are the priciest op in the
- * pipeline and most stills survive several refresh cycles unchanged.
+ * DB row so the next refresh can tell "same still" from "new still" and skip
+ * the write for the former — most stills survive several refresh cycles
+ * unchanged.
  */
 async function screenshotHashOf(base64: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(base64))
@@ -103,18 +102,18 @@ function withTimestamps(cam: CamMeta, fallbackSeenAt: string): CamMeta {
 }
 
 /**
- * Upsert the fresh cam set into D1 and prune long-vanished rows. Existing live
- * probe columns are preserved by the upsert when this refresh has no new probe
- * data for a cam.
+ * Upsert the fresh cam set into the DB and prune long-vanished rows. Existing
+ * live probe columns are preserved by the upsert when this refresh has no new
+ * probe data for a cam.
  */
 async function syncExploreDb(metas: CamMeta[], now: number): Promise<void> {
   try {
     const written = await upsertCams(metas, new Map(), now)
     await pruneCams(now)
-    console.log(`[ipcrawl] D1 cam upsert: ${written} cams.`)
+    console.log(`[ipcrawl] cam upsert: ${written} cams.`)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    console.error(`[ipcrawl] D1 cam sync failed: ${message}`)
+    console.error(`[ipcrawl] cam sync failed: ${message}`)
     throw err
   }
 }
@@ -156,9 +155,8 @@ export default defineTask({
     const refreshedAt = new Date().toISOString()
     const refreshStartedAt = Date.parse(refreshedAt)
 
-    // Leave a durable trace in KV before any Shodan work, so even a run that
-    // crashes (or one that the cron never fires) is diagnosable from
-    // /api/status instead of requiring Workers Logs spelunking.
+    // Leave a durable trace before any Shodan work, so even a run that
+    // crashes is diagnosable from /api/status.
     console.log(`[ipcrawl] cams:refresh started at ${refreshedAt}`)
     await recordRunStart(refreshedAt)
 
@@ -206,14 +204,9 @@ async function runRefresh(
   console.log(`[ipcrawl] Refreshing cams across ${QUERIES.length} queries...`)
 
   // Stream-and-persist: we never hold more than a small batch of base64
-  // screenshots in memory at once. Each `has_screenshot:1` banner is tens of
-  // KB of base64 (doubled as a JS string); buffering thousands of them across
-  // every query is what tripped Cloudflare's 128MB cap. Instead we write each
-  // screenshot to R2 as it arrives and keep only the lightweight `CamMeta`
-  // (no binary) in the in-memory list.
-  //
-  // 16-way bounded concurrency keeps R2 puts (~50ms each) flowing fast enough
-  // to fit the Workers wall-clock while capping live base64 to one batch.
+  // screenshots in memory at once. We write each screenshot to storage as it
+  // arrives and keep only the lightweight `CamMeta` (no binary) in the
+  // in-memory list. 16-way bounded concurrency keeps writes flowing fast.
   const CONCURRENCY = 16
   const seen = new Set<string>()
   const metas: CamMeta[] = []
@@ -223,10 +216,8 @@ async function runRefresh(
 
   let skipped = 0
 
-  // Liveness signal for the KV run log. If the platform kills this isolate
-  // (CPU/wall-clock limit), nothing below ever throws — the run just stops —
-  // so the log can only detect death by heartbeats going silent. Time-gated
-  // to one KV write per minute regardless of how often it's called.
+  // Liveness signal for the run log. Time-gated to one write per minute
+  // regardless of how often it's called.
   const HEARTBEAT_EVERY_MS = 60_000
   let lastHeartbeat = Date.now()
   const heartbeat = async () => {
@@ -246,8 +237,7 @@ async function runRefresh(
         const previous = previousByEndpoint.get(endpointKey(cam))
         const id = previous?.id ?? cam.id
         const hash = await screenshotHashOf(cam.screenshot.data)
-        // Same still as last refresh → the R2 object is already current
-        // (or fresher, if a live frame was persisted over it); skip the put.
+        // Same still as last refresh → skip the write.
         const unchanged = previous?.screenshotHash === hash
           && previous.screenshotMime === cam.screenshot.mime
         if (unchanged) {
@@ -355,8 +345,7 @@ async function runRefresh(
   }
   await recordRunFinish(refreshedAt, { status: 'ok', ...summary })
 
-  // Single structured line so the run is findable in Workers Logs with one
-  // search ("refresh summary") and machine-parseable if we ever ship logs.
+  // Single structured line for easy searching in logs.
   console.log(`[ipcrawl] cams:refresh summary ${JSON.stringify({
     startedAt: refreshedAt,
     durationMs: Date.now() - refreshStartedAt,

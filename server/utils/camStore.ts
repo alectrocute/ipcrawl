@@ -2,14 +2,14 @@ import type { Cam } from './shodan'
 import { getExploreDb, type ExploreDb } from './exploreDb'
 
 /**
- * Cam metadata as stored in D1 — everything *except* the screenshot binary.
- * The binary lives in the `screenshots` namespace keyed by `${id}.<ext>`.
+ * Cam metadata — everything *except* the screenshot binary. The binary lives
+ * in the `screenshots` storage namespace keyed by `${id}.<ext>`.
  */
 export type CamMeta = Omit<Cam, 'screenshot'> & {
   screenshotMime: string
   /**
    * SHA-256 of the Shodan screenshot base64 from the last refresh. Lets the
-   * next refresh skip the R2 put when the still hasn't changed (the common
+   * next refresh skip the write when the still hasn't changed (the common
    * case — Shodan recrawls hosts far less often than we refresh).
    */
   screenshotHash?: string
@@ -55,10 +55,10 @@ interface RefreshMetaRow {
   errors_json: string
 }
 
-// In-isolate cache for the active cam list / retained archive. `findCam` runs
-// on every /api/live poll, and without this each poll would re-read D1. The
-// active list only changes on the daily refresh, so a short per-isolate TTL
-// eliminates most hot-path reads at the cost of <=60s cross-isolate staleness.
+// In-process cache for the active cam list / retained archive. `findCam` runs
+// on every /api/live poll, and without this each poll would re-read the DB.
+// The active list only changes on the daily refresh, so a short TTL eliminates
+// most hot-path reads.
 const LIST_CACHE_TTL_MS = 60_000
 
 interface CachedCamList {
@@ -70,11 +70,8 @@ interface CachedCamList {
 let listCache: CachedCamList | null = null
 let archiveCache: CachedCamList | null = null
 
-// Per-id cache for `findCam`'s single-row fallback. `/api/live` calls findCam
-// on every edge-cache miss, and an isolate that only serves `/api/live` never
-// populates `listCache`, so without this each poll would issue a fresh D1
-// single-row read. Same staleness budget as the list caches — cam *metadata*
-// only changes on the daily refresh.
+// Per-id cache for `findCam`'s single-row fallback so each poll doesn't
+// issue a fresh DB single-row read. Same staleness budget as the list caches.
 const MAX_ID_CACHE = 512
 const idCache = new Map<string, { at: number, cam: CamMeta }>()
 
@@ -327,8 +324,7 @@ export async function writeLiveProbeCache(id: string, path: string | null): Prom
 
 export async function getScreenshotBytes(cam: CamMeta): Promise<Uint8Array | null> {
   const storage = useStorage('screenshots')
-  // Nitro normalizes binary keys differently per driver; getItemRaw returns
-  // a Uint8Array (or Buffer in Node) consistently across fs / R2 / KV.
+  // getItemRaw returns a Uint8Array (or Buffer in Node) consistently.
   const raw = await storage.getItemRaw<Uint8Array | ArrayBuffer | null>(
     screenshotKey(cam.id, cam.screenshotMime)
   )
@@ -344,15 +340,15 @@ export async function writeScreenshot(
   mime: string,
   base64: string
 ): Promise<void> {
-  // Decode base64 to bytes. Node has Buffer.from; Workers expose `atob`.
+  // Decode base64 to bytes.
   await writeScreenshotBytes(id, mime, base64ToBytes(base64))
 }
 
 /**
- * Write raw screenshot bytes for a cam. Used by both the scheduled Shodan refresh
- * (which decodes from base64) and the live-probe write-through (which already
- * has bytes in hand). Persisting live frames to R2 means a viewer who triggers
- * a successful upstream fetch raises the floor for every other viewer / isolate
+ * Write raw screenshot bytes for a cam. Used by both the scheduled Shodan
+ * refresh (which decodes from base64) and the live-probe write-through (which
+ * already has bytes in hand). Persisting live frames means a viewer who
+ * triggers a successful upstream fetch raises the floor for every other viewer
  * looking at the same cam — they'll see the refreshed frame on their next
  * Shodan-fallback read instead of the stale scheduled still.
  */
