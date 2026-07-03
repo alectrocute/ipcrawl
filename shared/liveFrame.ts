@@ -22,4 +22,4 @@ export type FrameSource
 // frame cannot change until the daily refresh, so further polls only burn edge
 // requests. Was 5; lowered after post-HN traffic showed most cams settle fast.
 export const SHODAN_BACKOFF_AFTER = 4
-export const EXPLORE_FRAME_POLL_MS = 3000
+export const EXPLORE_FRAME_POLL_MS = 2000

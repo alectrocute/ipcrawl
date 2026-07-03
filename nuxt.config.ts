@@ -36,14 +36,14 @@ export default defineNuxtConfig({
       camsInitDelay: 250,
       shodanQueryPace: 1100,
       shareUrlRetention: 24 * 60 * 60 * 1000,
-      liveProbeTimeout: 1500,
-      liveProbeBudget: 15000,
-      liveFetchTimeout: 3000,
-      liveFrameCache: 1000,
-      liveFrameGrace: 8000,
-      liveProbeRetry: 10 * 60 * 1000,
-      liveFramePersistLocal: 15 * 1000,
-      liveFramePersistGlobal: 60 * 1000
+      liveProbeTimeout: 2500,
+      liveProbeBudget: 30000,
+      liveFetchTimeout: 5000,
+      liveFrameCache: 800,
+      liveFrameGrace: 10000,
+      liveProbeRetry: 5 * 60 * 1000,
+      liveFramePersistLocal: 10 * 1000,
+      liveFramePersistGlobal: 45 * 1000
     }
   },
 
