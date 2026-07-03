@@ -169,9 +169,7 @@ async function copy(text: string, key: string) {
           API
         </h1>
         <p class="api-subtitle">
-          A single public endpoint. CORS-open, browser-cached per IP for five
-          minutes, no auth. It reports whether the requesting IP appears in the
-          IP Crawl catalogue.
+          Check if your public IP address is exposed in IP Crawl's catalogue.
         </p>
 
         <!-- Endpoint card -->
@@ -350,7 +348,7 @@ async function copy(text: string, key: string) {
             Notes
           </h2>
           <ul class="api-notes">
-            <li>The endpoint only answers on <code>ismycameraexposed.com</code>. The same path on <code>ipcrawl.com</code> returns 404 — the API is the programmatic surface of the "Is My Camera Exposed?" campaign, so it lives on that domain.</li>
+            <li>This API is the programmatic surface of the "Is My Camera Exposed?" campaign, so it lives on that domain.</li>
             <li><code>found</code> reflects a match against the public catalogue at request time. A camera that's already been secured drops off within the next scan cycle.</li>
             <li><code>checkedAt</code> is the server's epoch-ms clock when the lookup ran. Compare it to <code>Date.now()</code> to tell a fresh answer from a cached one: near-zero is a fresh origin hit, up to ~300000ms (5 min) is the browser cache serving the prior answer.</li>
           </ul>
