@@ -3,9 +3,10 @@ declare const process: { env: Record<string, string | undefined> }
 
 // True when building for a plain Node server (VPS) instead of Cloudflare
 // Workers. Storage backends differ: Workers binds KV/R2, node-server uses
-// SSD-backed fs drivers rooted at NUXT_DATA_DIR (default ./.data).
+// SSD-backed fs drivers rooted at a relative `./data` path (resolved against
+// WorkingDirectory at runtime, which is /srv/ipcrawl in the systemd unit).
 const isNodeServer = process.env.NITRO_PRESET === 'node-server'
-const dataDir = process.env.NUXT_DATA_DIR || './.data'
+const dataDir = './data'
 
 export default defineNuxtConfig({
   modules: [
