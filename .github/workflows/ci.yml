@@ -142,7 +142,7 @@ jobs:
         env:
           SSH_IP: ${{ vars.SSH_IP }}
           SSH_USER: ${{ vars.SSH_USER }}
-          SSH_PASS: ${{ vars.SSH_PASS }}
+          SSH_PASS: ${{ secrets.SSH_PASS }}
         run: |
           sudo apt-get install -y -qq sshpass
           export SSHPASS="$SSH_PASS"
