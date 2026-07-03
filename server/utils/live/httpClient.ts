@@ -56,7 +56,7 @@ export type HttpResult = HttpReply | { error: string }
 // a real browser — including library / framework UAs and our previous
 // custom app UA. This is the single biggest knob for probe success rate
 // against Shodan-discovered cams.
-const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 IPCrawl/1.0'
 
 /**
  * Workers `fetch()` is unreliable for direct-IP plaintext HTTP probing: it can
