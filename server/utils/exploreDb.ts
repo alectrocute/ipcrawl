@@ -51,6 +51,8 @@ const SCHEMA: string[] = [
   'CREATE INDEX IF NOT EXISTS idx_cams_live     ON cams(is_live)',
   'CREATE INDEX IF NOT EXISTS idx_cams_lastseen ON cams(last_seen_at DESC)',
   'CREATE INDEX IF NOT EXISTS idx_cams_geo      ON cams(lat, lon, is_live, id)',
+  // Powers the public /api/ip existence probe (SELECT 1 ... WHERE ip = ?).
+  'CREATE INDEX IF NOT EXISTS idx_cams_ip       ON cams(ip)',
   `CREATE TABLE IF NOT EXISTS cam_refresh_meta (
     id           TEXT PRIMARY KEY,
     refreshed_at TEXT NOT NULL,

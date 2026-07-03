@@ -161,8 +161,8 @@ onBeforeUnmount(() => {
 
 <template>
   <component
-    v-if="visible"
     :is="rootTag"
+    v-if="visible"
     v-bind="large ? {} : { 'to': '/stats', 'aria-label': 'View catalog stats' }"
     class="sync"
     :class="{ 'sync--imminent': active, 'sync--large': large, 'sync--link': !large }"

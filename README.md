@@ -21,6 +21,7 @@ intelligence sources (currently [Shodan](https://www.shodan.io/)). It provides:
   screensaver, live-only filtering, and shareable channel URLs (`/fun/c/[id]`). This was the original POC.
 - **Map** at `/map` — a spatial view of camera locations with clustered markers.
 - **Stats** at `/stats` — aggregate metrics and a 12-month trend chart.
+- **API** at `/api` — documentation for the public API (one CORS-open endpoint so far).
 - **"Is My Camera Exposed?"** at `/imce` — a consumer-facing scan that checks
   whether a visitor's IP appears in the catalogue, [ismycameraexposed.com](https://www.ismycameraexposed.com).
 
@@ -93,6 +94,7 @@ app/             Root app shell, global theme, error pages
 | `POST /api/explore/favorite/[id]` | Per-IP deduped favorite vote |
 | `GET /api/explore/thumb/[id].jpg` | Cached still thumbnail |
 | `GET /api/cam` | Random camera for Fun mode (uncached) |
+| `GET /api/ip` | Public, CORS-open exposure check for the requesting IP (browser-cached 5 min) |
 | `GET /api/live/[id].jpg` | Live frame proxy with screenshot fallback |
 | `GET /api/status` | Refresh diagnostics |
 

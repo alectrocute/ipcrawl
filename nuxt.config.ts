@@ -62,7 +62,11 @@ export default defineNuxtConfig({
     '/api/explore/facets': { swr: 600 },
     '/api/explore/facets/search': { swr: 1800 },
     '/api/map/points': { swr: 30 },
-    '/api/explore/cams/**': { swr: 120 }
+    '/api/explore/cams/**': { swr: 120 },
+    // Public exposure check. CORS-open (called from third-party pages like
+    // ismycameraexposed.com) and browser-cached per IP for 5 minutes — see
+    // server/api/ip.get.ts for why this isn't a SWR/route-rule cache.
+    '/api/ip': { cors: true }
   },
 
   experimental: {

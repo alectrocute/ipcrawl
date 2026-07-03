@@ -249,6 +249,16 @@ useSeoMeta({
             Stats
           </UButton>
           <UButton
+            to="/api"
+            icon="i-lucide-terminal"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            class="explore__about-button"
+          >
+            API
+          </UButton>
+          <UButton
             class="explore__mobile-filters"
             color="neutral"
             variant="subtle"
@@ -334,6 +344,15 @@ useSeoMeta({
             block
           >
             Stats
+          </UButton>
+          <UButton
+            to="/api"
+            icon="i-lucide-terminal"
+            color="neutral"
+            variant="ghost"
+            block
+          >
+            API
           </UButton>
           <UButton
             to="/map"

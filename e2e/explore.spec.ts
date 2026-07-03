@@ -48,6 +48,14 @@ test.describe('Explore catalog page', () => {
     await expect(page).toHaveURL(/\/map/)
   })
 
+  test('navigates to API page', async ({ page }) => {
+    await page.goto('/')
+
+    await page.getByRole('link', { name: 'API' }).first().click()
+    await expect(page).toHaveURL(/\/api/)
+    await expect(page.locator('.api-page__header')).toBeVisible()
+  })
+
   test('mobile filter slideover opens', async ({ page }) => {
     await page.setViewportSize({ width: 480, height: 800 })
     await page.goto('/')

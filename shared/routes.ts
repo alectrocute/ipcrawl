@@ -3,6 +3,7 @@
 // code while preserving the exact public paths.
 
 export const API_CAM = '/api/cam'
+export const API_IP = '/api/ip'
 export const API_EXPLORE_CAMS = '/api/explore/cams'
 export const API_EXPLORE_FACETS = '/api/explore/facets'
 export const API_EXPLORE_FACET_SEARCH = '/api/explore/facets/search'

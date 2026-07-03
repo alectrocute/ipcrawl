@@ -68,4 +68,4 @@ An image-classification pipeline makes a best-effort attempt to automatically hi
 
 ---
 
-Made by [@alectrocute](https://alec.is) · Join the conversation at [r/ipcrawl](https://reddit.com/r/ipcrawl) · IP Crawl is open source on [GitHub](https://github.com/alectrocute/ipcrawl)
+Made by [@alectrocute](https://alec.is) · Join the conversation at [r/ipcrawl](https://reddit.com/r/ipcrawl)

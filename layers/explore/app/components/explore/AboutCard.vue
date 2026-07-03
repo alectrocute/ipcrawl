@@ -25,7 +25,7 @@ defineOptions({ name: 'ExploreAboutCard' })
         class="about__author-arrow"
       />
     </a>
-
+  <!--
     <a
       class="about__author about__author--github"
       href="https://github.com/alectrocute/ipcrawl"
@@ -37,7 +37,7 @@ defineOptions({ name: 'ExploreAboutCard' })
         name="i-lucide-arrow-up-right"
         class="about__author-arrow"
       />
-    </a>
+    </a> -->
   </aside>
 </template>
 
