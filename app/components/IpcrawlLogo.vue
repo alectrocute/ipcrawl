@@ -40,11 +40,47 @@ const inner = computed(() => (props.link ? NuxtLink : 'span'))
       class="logo__inner"
       v-bind="link ? { 'to': '/', 'aria-label': 'IP Crawl — reset to default view' } : {}"
     >
-      <UIcon
+      <!-- Radar mark, same glyph as public/favicon.svg so the browser tab and
+           the page header read as one brand. Inline SVG (not the old PNG) so
+           it stays crisp at 19px, themes via currentColor, and can carry a
+           slow sweep. Decorative: the link's aria-label (or the wordmark
+           text) names it for AT. -->
+      <svg
         v-if="variant === 'full'"
-        name="i-lucide-radar"
         class="logo__mark"
-      />
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <!-- Outer ring: two arcs leaving cardinal gaps -->
+        <path d="M19.07 4.93A10 10 0 0 0 6.99 3.34" />
+        <path d="M2.29 9.62a10 10 0 1 0 19.02-1.27" />
+        <!-- Middle ring: two arcs with a top gap -->
+        <path d="M16.24 7.76a6 6 0 1 0-8.01 8.91" />
+        <path d="M17.98 11.66a6 6 0 0 1-2.22 5.01" />
+        <!-- Static contact blips -->
+        <path d="M4 6h.01" />
+        <path d="M12 18h.01" />
+        <!-- Center dot -->
+        <circle
+          cx="12"
+          cy="12"
+          r="2"
+        />
+        <!-- Rotating sweep: faint phosphor wash + bright leading edge -->
+        <g class="logo__sweep">
+          <path
+            class="logo__sweep-wedge"
+            d="M12 12 L12 2 A10 10 0 0 1 19.07 4.93 Z"
+          />
+          <line
+            class="logo__sweep-line"
+            x1="12"
+            y1="12"
+            x2="19.07"
+            y2="4.93"
+          />
+        </g>
+      </svg>
       <span class="logo__ip">IP</span>
       <span class="logo__crawl">CRAWL</span>
       <span
@@ -104,6 +140,40 @@ const inner = computed(() => (props.link ? NuxtLink : 'span'))
   width: 19px;
   height: 19px;
   color: var(--phosphor);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* Faint phosphor bloom so the radar reads as "lit" against the dark studio
+     rather than a flat line drawing. */
+  filter: drop-shadow(0 0 3px rgb(var(--phosphor-rgb) / 0.4));
+}
+
+/* Faint phosphor wash that trails the leading edge. */
+.logo__sweep-wedge {
+  fill: currentColor;
+  fill-opacity: 0.14;
+  stroke: none;
+}
+
+/* Bright leading edge of the sweep — the active beam. */
+.logo__sweep-line {
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-opacity: 0.95;
+}
+
+/* Slow radar sweep around the viewBox center. The global
+   prefers-reduced-motion rule in main.css clamps this to a static frame. */
+.logo__sweep {
+  transform-box: view-box;
+  transform-origin: 12px 12px;
+  animation: logo-radar-sweep 6s linear infinite;
+}
+
+@keyframes logo-radar-sweep {
+  to { transform: rotate(360deg); }
 }
 
 .logo__ip {
@@ -114,43 +184,20 @@ const inner = computed(() => (props.link ? NuxtLink : 'span'))
   color: var(--phosphor);
 }
 
-/* Flat enamel chip: a tinted gradient face tilted back slightly in perspective
-   like a sticker slapped on the wordmark. */
+/* Flat enamel chip: a quiet phosphor-tinted status pill. Replaces the prior
+   tilted, glossy 3D badge — modern flat treatment that reads as an indicator
+   rather than a sticker. */
 .logo__beta {
-  position: relative;
-  align-self: flex-start;
-  margin-left: -1px;
-  padding: 3px 5px 2px;
-  border-radius: 5px;
-  overflow: hidden;
+  margin-left: 2px;
+  padding: 2px 5px 1px;
+  border: 1px solid color-mix(in oklab, var(--phosphor), transparent 58%);
+  border-radius: 4px;
   font-size: 8px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-indent: 0.16em;
-  color: var(--phosphor-ink);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
-  background: linear-gradient(180deg, color-mix(in oklab, var(--phosphor), white 55%) 0%, var(--phosphor) 48%, color-mix(in oklab, var(--phosphor), black 30%) 100%);
-  transform: perspective(60px) rotateX(14deg) rotate(-4deg);
-  transform-origin: bottom left;
-}
-
-/* Recurring glossy glint sweeping across the face. */
-.logo__beta::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    115deg,
-    transparent 32%,
-    rgba(255, 255, 255, 0.75) 48%,
-    transparent 64%
-  );
-  transform: translateX(-130%);
-  animation: logo-beta-glint 5s ease-in-out infinite;
-}
-
-@keyframes logo-beta-glint {
-  0%, 72% { transform: translateX(-130%); }
-  88%, 100% { transform: translateX(130%); }
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-indent: 0.18em;
+  color: var(--phosphor-bright);
+  background: rgb(var(--phosphor-rgb) / 0.10);
+  align-self: center;
 }
 </style>

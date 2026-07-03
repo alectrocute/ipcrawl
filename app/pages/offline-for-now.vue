@@ -9,21 +9,12 @@ useSeoMeta({
 </script>
 
 <template>
-  <ImceIntroShell
+  <StatusShell
     title="We're temporarily offline"
     icon="i-lucide-construction"
-    standalone
-  >
-    <p class="imce__intro-text">
-      We're temporarily overloaded and had to pause the crawler.
-      We'll be back online as soon as we can. Thank you for your patience!
-    </p>
-    <p class="imce__intro-hint imce__intro-hint--warn">
-      <UIcon
-        name="i-lucide-loader-circle"
-        class="imce__intro-spin"
-      />
-      Standing by to restore service…
-    </p>
-  </ImceIntroShell>
+    message="We're temporarily overloaded and had to pause the crawler. We'll be back online as soon as we can. Thank you for your patience!"
+    hint="Standing by to restore service…"
+    hint-variant="warn"
+    hint-spinner
+  />
 </template>
