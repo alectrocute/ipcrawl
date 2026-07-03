@@ -104,6 +104,7 @@ const inner = computed(() => (props.link ? NuxtLink : 'span'))
      (page headers, the fun-mode pill), so route changes glide it between
      positions. Choreography lives in main.css. */
   view-transition-name: brand;
+  will-change: all;
 }
 
 .logo--full {

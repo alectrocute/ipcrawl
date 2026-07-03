@@ -33,7 +33,6 @@ function shareLabel(count: number): string {
       v-for="(item, i) in items"
       :key="item.value"
       class="bar-list__row"
-      :style="{ '--i': i }"
     >
       <div class="bar-list__meta">
         <span class="bar-list__rank">{{ String(i + 1).padStart(2, '0') }}</span>
@@ -136,27 +135,15 @@ function shareLabel(count: number): string {
     rgb(var(--phosphor-rgb) / 0.22) 0%,
     rgb(var(--phosphor-rgb) / 0.78) 100%
   );
-  transform-origin: left center;
-  animation: bar-grow 640ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(var(--i) * 45ms);
 }
 
 /* Live overlay — the brighter leading strip is the slice that answers a probe
-   right now. Scales with the parent's grow animation, which keeps it honest
-   as a fraction of the bar at all times. */
+   right now. Scales with the parent's fill, which keeps it honest as a
+   fraction of the bar at all times. */
 .bar-list__live {
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: 4px;
   background: var(--phosphor-bright);
-}
-
-@keyframes bar-grow {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
 }
 </style>

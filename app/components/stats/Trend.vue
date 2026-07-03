@@ -284,13 +284,7 @@ function fmtDate(ts: number): string {
 }
 
 .trend__line {
-  animation: trend-draw 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
   vector-effect: non-scaling-stroke;
-}
-
-.trend__area {
-  opacity: 0;
-  animation: trend-fade 700ms ease 200ms both;
 }
 
 .trend__points circle {
@@ -302,23 +296,6 @@ function fmtDate(ts: number): string {
 
 .trend__hits circle {
   pointer-events: all;
-}
-
-@keyframes trend-draw {
-  from {
-    stroke-dasharray: 2000;
-    stroke-dashoffset: 2000;
-  }
-  to {
-    stroke-dasharray: 2000;
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes trend-fade {
-  to {
-    opacity: 1;
-  }
 }
 
 .trend__peak circle {
