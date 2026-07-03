@@ -120,3 +120,54 @@ jobs:
           echo ""
           echo "✅ Behavior tests included:"
           echo "$TEST_CHANGES" | sed 's/^/  - /'
+
+  # ── Deploy to VPS ──────────────────────────────────────────────────────────
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [static, e2e]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Deploy to VPS
+        env:
+          SSH_IP: ${{ vars.SSH_IP }}
+          SSH_USER: ${{ vars.SSH_USER }}
+          SSH_PASS: ${{ vars.SSH_PASS }}
+        run: |
+          sudo apt-get install -y -qq sshpass
+          export SSHPASS="$SSH_PASS"
+          SSH_OPTS="-o StrictHostKeyChecking=no -o ServerAliveInterval=30"
+          TARGET="${SSH_USER}@${SSH_IP}"
+          APP_ROOT=/srv/ipcrawl
+
+          echo "==> Shipping .output/ to ${TARGET}:${APP_ROOT}/app"
+          sshpass -e rsync -az --delete -e "ssh $SSH_OPTS" \
+            .output/ \
+            "${TARGET}:${APP_ROOT}/app/"
+
+          echo "==> Restarting service"
+          sshpass -e ssh $SSH_OPTS "$TARGET" \
+            "chown -R ipcrawl:ipcrawl ${APP_ROOT}/app && systemctl restart ipcrawl"
+
+          echo "==> Health check"
+          for i in $(seq 1 15); do
+            if sshpass -e ssh $SSH_OPTS "$TARGET" \
+              "curl -fsS -m 5 http://127.0.0.1:3000/api/status >/dev/null 2>&1"; then
+              echo "Origin is up."
+              exit 0
+            fi
+            echo "  not ready yet (attempt $i/15)…"
+            sleep 3
+          done
+          echo "::error::Health check failed after 15 attempts."
+          exit 1
