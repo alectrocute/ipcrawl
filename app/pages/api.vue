@@ -73,11 +73,6 @@ async function check() {
 
 check()                      // run once immediately...
 setInterval(check, HOUR_MS)  // ...then every hour`
-const responseExample = `{
-  "found": true,
-  "ip": "203.0.113.42",
-  "checkedAt": 1751568000000
-}`
 
 const result = ref<CheckMyIpResponse | null>(null)
 const resultError = ref<string | null>(null)
@@ -333,7 +328,7 @@ async function copy(text: string, key: string) {
 
             <div class="api-sample">
               <header class="api-sample__head">
-                <span class="api-sample__lang">JavaScript · hourly monitor</span>
+                <span class="api-sample__lang">JavaScript · Node.js</span>
                 <UButton
                   size="xs"
                   color="neutral"
@@ -346,13 +341,6 @@ async function copy(text: string, key: string) {
               </header>
               <pre class="api-code"><code>{{ fetchExample }}</code></pre>
             </div>
-
-            <div class="api-sample">
-              <header class="api-sample__head">
-                <span class="api-sample__lang">Response · 200</span>
-              </header>
-              <pre class="api-code api-code--response"><code>{{ responseExample }}</code></pre>
-            </div>
           </div>
         </section>
 
@@ -363,11 +351,8 @@ async function copy(text: string, key: string) {
           </h2>
           <ul class="api-notes">
             <li>The endpoint only answers on <code>ismycameraexposed.com</code>. The same path on <code>ipcrawl.com</code> returns 404 — the API is the programmatic surface of the "Is My Camera Exposed?" campaign, so it lives on that domain.</li>
-            <li>The requesting IP is resolved from <code>cf-connecting-ip</code>, falling back to <code>x-forwarded-for</code>.</li>
             <li><code>found</code> reflects a match against the public catalogue at request time. A camera that's already been secured drops off within the next scan cycle.</li>
             <li><code>checkedAt</code> is the server's epoch-ms clock when the lookup ran. Compare it to <code>Date.now()</code> to tell a fresh answer from a cached one: near-zero is a fresh origin hit, up to ~300000ms (5 min) is the browser cache serving the prior answer.</li>
-            <li>Raw IP addresses are never published by other endpoints; this one only ever echoes the caller's own IP back to the caller.</li>
-            <li>More endpoints may land here as the project grows. For now, this is the only public one.</li>
           </ul>
         </section>
       </main>
