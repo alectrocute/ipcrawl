@@ -37,9 +37,6 @@ const formatted = computed(() => props.value.toLocaleString('en-US'))
   padding: 18px 20px 16px;
   border: 1px solid var(--hairline, rgba(255, 255, 255, 0.08));
   border-radius: 14px;
-  background:
-    linear-gradient(180deg, rgb(var(--phosphor-rgb) / 0.045) 0%, transparent 45%),
-    var(--glass, rgba(12, 17, 16, 0.55));
   transition: border-color 160ms ease, transform 160ms ease;
 }
 

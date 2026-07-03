@@ -318,19 +318,16 @@ const updatedLabel = computed(() => {
 }
 
 .stats-section__key--total {
-  background: linear-gradient(90deg, rgb(var(--phosphor-rgb) / 0.22), rgb(var(--phosphor-rgb) / 0.78));
 }
 
 .stats-section__key--live {
   margin-left: 10px;
-  background: var(--phosphor-bright);
 }
 
 .stats-panel {
   padding: clamp(16px, 2.4vw, 24px);
   border: 1px solid var(--hairline, rgba(255, 255, 255, 0.08));
   border-radius: 16px;
-  background: var(--glass, rgba(12, 17, 16, 0.55));
 }
 
 .stats-empty {
