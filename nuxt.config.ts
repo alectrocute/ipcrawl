@@ -58,6 +58,7 @@ export default defineNuxtConfig({
     '/api/refresh/status': { swr: 10 },
     '/api/stats': { swr: 1800 },
     '/api/stats/history': { swr: 1800 },
+    '/api/stats/system': { swr: 5 },
     '/api/explore/cams': { swr: 30 },
     '/api/explore/facets': { swr: 600 },
     '/api/explore/facets/search': { swr: 1800 },

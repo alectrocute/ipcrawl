@@ -156,6 +156,8 @@ const updatedLabel = computed(() => {
               large
               class="stats-sync"
             />
+
+            <StatsSystem />
           </section>
         </template>
 

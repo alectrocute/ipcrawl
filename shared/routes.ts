@@ -14,6 +14,7 @@ export const API_IMCE_NEARBY = '/api/imce/nearby'
 export const API_REFRESH_STATUS = '/api/refresh/status'
 export const API_STATS = '/api/stats'
 export const API_STATS_HISTORY = '/api/stats/history'
+export const API_STATS_SYSTEM = '/api/stats/system'
 export const FUN_CHANNEL_PREFIX = '/fun/c'
 
 export const CAM_QUERY_LIVE = 'live'
