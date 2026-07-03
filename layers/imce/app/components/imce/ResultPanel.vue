@@ -60,7 +60,7 @@ const nearestSuffix = computed(() =>
       v-else
       class="imce-result__lede"
     >
-      Nothing in the catalogue within <strong>{{ radiusLabel }}</strong>
+      Nothing in the catalog within <strong>{{ radiusLabel }}</strong>
       of you. The list isn't complete, so still check any cameras you own.
     </p>
 
@@ -122,7 +122,7 @@ const nearestSuffix = computed(() =>
         variant="ghost"
         size="md"
       >
-        Browse the catalogue
+        Browse the catalog
       </UButton>
     </div>
 

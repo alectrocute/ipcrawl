@@ -100,7 +100,7 @@ function retry() {
             size="lg"
             @click="goHome"
           >
-            Back to the catalogue
+            Back to the catalog
           </UButton>
         </main>
       </div>

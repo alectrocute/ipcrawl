@@ -253,7 +253,7 @@ function fmtDate(ts: number): string {
       No history yet
     </p>
     <p class="trend__empty-hint">
-      The rolling 12-month chart fills in as scheduled scans record the catalogue size.
+      The rolling 12-month chart fills in as scheduled scans record the catalog size.
     </p>
   </div>
 </template>

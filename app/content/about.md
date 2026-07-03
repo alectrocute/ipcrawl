@@ -37,7 +37,7 @@ Sending requests with a clearly identifiable header, it scans hosts for known we
  - Once a stream goes entirely dark, it's automatically dropped from the database.
 
 To be absolutely clear: the engine never attempts authentication, never brute-forces credentials and never exploits software vulnerabilities.
-It only catalogues what is already completely open to the public internet.
+It only catalogs what is already completely open to the public internet.
 
 Feed locations are approximate.
 They're derived from each device's IP address using [MaxMind](https://www.maxmind.com)'s GeoIP data, which resolves to roughly the right city or region, not a street address.

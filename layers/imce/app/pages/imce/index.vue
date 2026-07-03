@@ -22,7 +22,7 @@ const dialog = await useExploreCamDialog()
 
 useSeoMeta({
   title: 'Is my camera exposed? — IP Crawl',
-  description: 'Scan your location against a live catalogue of open webcams and find out if there are internet-exposed cameras near you — and how to secure them.',
+  description: 'Scan your location against a live catalog of open webcams and find out if there are internet-exposed cameras near you — and how to secure them.',
   ogTitle: 'Is my camera exposed?',
   ogDescription: 'Find out if there are internet-exposed cameras near you, then learn how to lock them down.',
   twitterCard: 'summary_large_image',
@@ -71,7 +71,7 @@ useSeoMeta({
             color="neutral"
             variant="ghost"
             size="sm"
-            title="Back to catalogue"
+            title="Back to catalog"
             class="imce__nav-btn"
           >
             <span class="imce__btn-label">Back to grid</span>
@@ -132,7 +132,7 @@ useSeoMeta({
       >
         <template v-if="phase === 'locating'">
           <p class="imce__intro-text">
-            Using the GPS Location feature of your web browser, we'll scan the IP Crawl catalogue for exposed cameras in your area.
+            Using the GPS Location feature of your web browser, we'll scan the IP Crawl catalog for exposed cameras in your area.
           </p>
           <p class="imce__intro-hint">
             <UIcon
@@ -163,7 +163,7 @@ useSeoMeta({
         <template v-else-if="phase === 'unsupported'">
           <p class="imce__intro-text">
             This browser can't share location, so the scan won't work. The
-            full catalogue is still on the map.
+            full catalog is still on the map.
           </p>
         </template>
 

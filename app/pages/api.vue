@@ -5,7 +5,7 @@ import { API_IP } from '#shared/routes'
 defineOptions({ name: 'ApiPage' })
 
 const title = 'API — IP Crawl'
-const description = 'The public IP Crawl API: a single CORS-open endpoint that reports whether the requesting IP appears in the open-webcam catalogue.'
+const description = 'The public IP Crawl API: a single CORS-open endpoint that reports whether the requesting IP appears in the open-webcam catalog.'
 
 useSeoMeta({
   title,
@@ -39,7 +39,7 @@ const fetchUrl = configuredImceDomain ? sampleUrl : API_IP
 
 const curlExample = `curl ${sampleUrl}`
 const fetchExample = `// Hourly exposure monitor — alert me if my public IP shows up in the
-// IP Crawl catalogue. A flip from found:false → true means a webcam on
+// IP Crawl catalog. A flip from found:false → true means a webcam on
 // my network just got exposed to the public internet (default creds on
 // a new device, a misconfigured firewall, a forgotten port forward).
 // Catching it within the hour means I can secure the camera before
@@ -58,7 +58,7 @@ async function check() {
   if (Date.now() - checkedAt > 60_000) return
 
   if (found !== known) {
-    if (found) console.warn(\`[ipcrawl] \${ip} just appeared in the catalogue\`)
+    if (found) console.warn(\`[ipcrawl] \${ip} just appeared in the catalog\`)
     else       console.log(\`[ipcrawl] \${ip} is no longer listed\`)
     known = found
   }
@@ -162,7 +162,7 @@ async function copy(text: string, key: string) {
           API
         </h1>
         <p class="api-subtitle">
-          Check if your public IP address is exposed in IP Crawl's catalogue.
+          Check if your public IP address is exposed in IP Crawl's catalog.
         </p>
 
         <!-- Endpoint card -->
@@ -200,7 +200,7 @@ async function copy(text: string, key: string) {
                 </dt>
                 <dd class="api-field__desc">
                   <code>true</code> if the requesting IP matches at least one
-                  row in the catalogue, <code>false</code> otherwise — including
+                  row in the catalog, <code>false</code> otherwise — including
                   when no IP could be resolved or the DB is cold (the endpoint
                   degrades to "not found" rather than 500ing).
                 </dd>
@@ -283,10 +283,10 @@ async function copy(text: string, key: string) {
                 <span class="api-result__label">
                   <template v-if="resultError">{{ resultError }}</template>
                   <template v-else-if="result?.found">
-                    Your IP <code :title="result.ip">{{ result.ip }}</code> appears in the catalogue.
+                    Your IP <code :title="result.ip">{{ result.ip }}</code> appears in the catalog.
                   </template>
                   <template v-else>
-                    Your IP <code :title="result?.ip ?? 'unknown'">{{ result?.ip ?? 'unknown' }}</code> is not in the catalogue.
+                    Your IP <code :title="result?.ip ?? 'unknown'">{{ result?.ip ?? 'unknown' }}</code> is not in the catalog.
                   </template>
                 </span>
                 <span
@@ -379,7 +379,7 @@ async function copy(text: string, key: string) {
           </h2>
           <ul class="api-notes">
             <li>This API is the programmatic surface of the "Is My Camera Exposed?" campaign, so it lives on that domain.</li>
-            <li><code>found</code> reflects a match against the public catalogue at request time. A camera that's already been secured drops off within the next scan cycle.</li>
+            <li><code>found</code> reflects a match against the public catalog at request time. A camera that's already been secured drops off within the next scan cycle.</li>
             <li><code>checkedAt</code> is the server's epoch-ms clock when the lookup ran. Compare it to <code>Date.now()</code> to tell a fresh answer from a cached one: near-zero is a fresh origin hit, up to ~300000ms (5 min) is the browser cache serving the prior answer.</li>
           </ul>
         </section>

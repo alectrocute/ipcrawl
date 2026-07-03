@@ -87,7 +87,7 @@ const updatedLabel = computed(() => {
           >
             <header class="stats-section__head">
               <h2 class="stats-section__title">
-                Catalogue size over time
+                Catalog size over time
               </h2>
             </header>
             <div class="stats-panel">

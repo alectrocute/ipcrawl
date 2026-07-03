@@ -1,10 +1,10 @@
 # IP Crawl ([ipcrawl.com](https://ipcrawl.com))
 
-**A filterable catalogue and live-preview surface for open webcams discovered
+**A filterable catalog and live-preview surface for open webcams discovered
 through public internet intelligence.**
 
 <p align="center">
-  <img src="./public/explore-screenshot.png" alt="IP Crawl Explore UI — filterable camera catalogue with map, stats, and live preview" width="100%">
+  <img src="./public/explore-screenshot.png" alt="IP Crawl Explore UI — filterable camera catalog with map, stats, and live preview" width="100%">
 </p>
 
 ---
@@ -14,7 +14,7 @@ through public internet intelligence.**
 IP Crawl surfaces open webcam data discovered through public internet
 intelligence sources (currently [Shodan](https://www.shodan.io/)). It provides:
 
-- **Catalogue** at `/`, "Explore" — browse thousands of cameras by country, city,
+- **Catalog** at `/`, "Explore" — browse thousands of cameras by country, city,
   organization, manufacturer, liveness, or free-text search. Open any camera for
   a larger live or still preview.
 - **Fun Mode** at `/fun` — a CRT-styled random channel viewer with Guess Mode,
@@ -23,7 +23,7 @@ intelligence sources (currently [Shodan](https://www.shodan.io/)). It provides:
 - **Stats** at `/stats` — aggregate metrics and a 12-month trend chart.
 - **API** at `/api` — documentation for the public API (one CORS-open endpoint so far).
 - **"Is My Camera Exposed?"** at `/imce` — a consumer-facing scan that checks
-  whether a visitor's IP appears in the catalogue, [ismycameraexposed.com](https://www.ismycameraexposed.com).
+  whether a visitor's IP appears in the catalog, [ismycameraexposed.com](https://www.ismycameraexposed.com).
 
 This project has a mission to secure all open webcams and bring the total number of open webcams to zero. Read more about the mission [here](https://ipcrawl.com/about).
 
@@ -58,7 +58,7 @@ pnpm run dev
 ```
 
 The dev server runs at `http://localhost:3000`. Storage defaults to the local
-filesystem (`./.data/`), so you can browse the catalogue locally.
+filesystem (`./.data/`), so you can browse the catalog locally.
 
 ### Environment Variables
 
@@ -75,7 +75,7 @@ filesystem (`./.data/`), so you can browse the catalogue locally.
 ```
 app/             Root app shell, global theme, error pages
 ├── layers/
-│   ├── explore/   Catalogue UI at / (grid, sidebar, dialog)
+│   ├── explore/   Catalog UI at / (grid, sidebar, dialog)
 │   ├── fun/       CRT roulette at /fun (random channel viewer)
 │   ├── imce/      "Is My Camera Exposed?" scan at /imce
 │   └── map/       Map explorer at /map
@@ -88,7 +88,7 @@ app/             Root app shell, global theme, error pages
 
 | Route | Description |
 |-------|-------------|
-| `GET /api/explore/cams` | Paginated catalogue list (SWR 30s) |
+| `GET /api/explore/cams` | Paginated catalog list (SWR 30s) |
 | `GET /api/explore/facets` | Cross-filtered facet counts (SWR 10m) |
 | `GET /api/explore/cams/[id]` | Single camera detail |
 | `POST /api/explore/favorite/[id]` | Per-IP deduped favorite vote |
