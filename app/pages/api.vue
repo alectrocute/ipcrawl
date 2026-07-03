@@ -50,18 +50,11 @@ const HOUR_MS = 60 * 60 * 1000
 let known = null  // previous \`found\` value — only fire on a change
 
 async function check() {
-  // cache: 'default' lets the browser reuse a cached answer for up to
-  // 5 min (the endpoint's max-age). At a 1-hour cadence the cache is
-  // always stale by the next tick, so every check is a fresh origin hit
-  // — checkedAt will read within a few ms of Date.now().
   const res = await fetch(URL, { cache: 'default' })
   if (!res.ok) return  // network or server hiccup — try again next hour
 
   const { found, ip, checkedAt } = await res.json()
 
-  // Guard against a stale cached answer slipping through: if checkedAt
-  // is far behind "now", skip the comparison so we don't silently miss
-  // a real change.
   if (Date.now() - checkedAt > 60_000) return
 
   if (found !== known) {
@@ -191,24 +184,62 @@ async function copy(text: string, key: string) {
             </UButton>
           </div>
 
-          <dl class="api-meta">
-            <div class="api-meta__row">
-              <dt>CORS</dt>
-              <dd><code>*</code> — callable from any origin</dd>
+          <div class="api-response">
+            <div class="api-response__head">
+              <span class="api-response__title">Response</span>
+              <span class="api-response__status">
+                <code>200 OK</code> · <code>application/json</code>
+              </span>
             </div>
-            <div class="api-meta__row">
-              <dt>Cache</dt>
-              <dd><code>private, max-age=300</code> — 5 min per IP, browser-only</dd>
+
+            <dl class="api-fields">
+              <div class="api-field">
+                <dt class="api-field__head">
+                  <code class="api-field__name">found</code>
+                  <span class="api-field__type">boolean</span>
+                </dt>
+                <dd class="api-field__desc">
+                  <code>true</code> if the requesting IP matches at least one
+                  row in the catalogue, <code>false</code> otherwise — including
+                  when no IP could be resolved or the DB is cold (the endpoint
+                  degrades to "not found" rather than 500ing).
+                </dd>
+              </div>
+              <div class="api-field">
+                <dt class="api-field__head">
+                  <code class="api-field__name">ip</code>
+                  <span class="api-field__type">string</span>
+                </dt>
+                <dd class="api-field__desc">
+                  The IP resolved from <code>cf-connecting-ip</code> (then
+                  <code>x-forwarded-for</code>), echoed back so a caller can
+                  confirm which address was checked. <code>"unknown"</code> when
+                  no forwarded IP is present.
+                </dd>
+              </div>
+              <div class="api-field">
+                <dt class="api-field__head">
+                  <code class="api-field__name">checkedAt</code>
+                  <span class="api-field__type">number</span>
+                </dt>
+                <dd class="api-field__desc">
+                  Server epoch-ms clock at the moment the lookup ran. Compare to
+                  <code>Date.now()</code> to detect a cached answer: near-zero
+                  is a fresh origin hit, up to ~300000ms (5 min) is the browser
+                  cache serving the prior answer.
+                </dd>
+              </div>
+            </dl>
+
+            <div class="api-response__sample">
+              <span class="api-response__sample-label">Example response</span>
+              <pre class="api-response__sample-code"><code>{
+  "found": false,
+  "ip": "203.0.113.42",
+  "checkedAt": 1783104000000
+}</code></pre>
             </div>
-            <div class="api-meta__row">
-              <dt>Auth</dt>
-              <dd>None</dd>
-            </div>
-            <div class="api-meta__row">
-              <dt>Rate limit</dt>
-              <dd>Shared API budget (per-IP sliding window)</dd>
-            </div>
-          </dl>
+          </div>
 
           <div class="api-card__try">
             <div class="api-card__try-controls">
@@ -475,22 +506,21 @@ async function copy(text: string, key: string) {
   white-space: nowrap;
 }
 
-.api-meta {
+.api-response {
   margin: 18px 0 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 24px;
-}
-
-.api-meta__row {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 8px 0;
-  border-top: 1px solid var(--hairline, rgba(255, 255, 255, 0.08));
+  gap: 14px;
 }
 
-.api-meta__row dt {
+.api-response__head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.api-response__title {
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.14em;
@@ -498,18 +528,102 @@ async function copy(text: string, key: string) {
   color: var(--text-mute, #58615d);
 }
 
-.api-meta__row dd {
-  font-size: 13px;
+.api-response__status {
+  font-size: 12px;
   color: var(--text-dim, #8b9591);
 }
 
-.api-meta__row code {
+.api-response__status code {
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--phosphor-bright);
   background: rgb(var(--phosphor-rgb) / 0.08);
   padding: 1px 5px;
   border-radius: 4px;
+}
+
+.api-fields {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.api-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 0;
+  border-top: 1px solid var(--hairline, rgba(255, 255, 255, 0.08));
+}
+
+.api-field__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.api-field__name {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--phosphor-bright);
+  background: rgb(var(--phosphor-rgb) / 0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.api-field__type {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-mute, #58615d);
+}
+
+.api-field__desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-dim, #8b9591);
+}
+
+.api-field__desc code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--phosphor-bright);
+  background: rgb(var(--phosphor-rgb) / 0.08);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.api-response__sample {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.api-response__sample-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-mute, #58615d);
+}
+
+.api-response__sample-code {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--hairline, rgba(255, 255, 255, 0.08));
+  background: var(--bg-1, #070a09);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text, #f4f6f5);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.api-response__sample-code code {
+  font-family: inherit;
 }
 
 .api-card__try {
@@ -801,8 +915,8 @@ async function copy(text: string, key: string) {
 }
 
 @media (max-width: 620px) {
-  .api-meta {
-    grid-template-columns: 1fr;
+  .api-response__sample-code {
+    font-size: 11.5px;
   }
 }
 
