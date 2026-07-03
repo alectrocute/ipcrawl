@@ -45,8 +45,8 @@ export type RateLimitBindingName = keyof RateLimitEnv
 const FALLBACK_BUDGETS: Record<RateLimitBindingName, { limit: number, periodMs: number }> = {
   LIVE_RATE_LIMITER: { limit: 30, periodMs: 10_000 },
   API_RATE_LIMITER: { limit: 100, periodMs: 10_000 },
-  THUMB_RATE_LIMITER: { limit: 150, periodMs: 10_000 },
-  THUMB_HOTLINK_RATE_LIMITER: { limit: 20, periodMs: 10_000 },
+  THUMB_RATE_LIMITER: { limit: 1000, periodMs: 10_000 },
+  THUMB_HOTLINK_RATE_LIMITER: { limit: 200, periodMs: 10_000 },
   FAV_RATE_LIMITER: { limit: 25, periodMs: 10_000 },
   FACET_SEARCH_RATE_LIMITER: { limit: 10, periodMs: 10_000 }
 }
