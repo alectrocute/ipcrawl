@@ -214,7 +214,6 @@ async function copy(text: string, key: string) {
             <div class="api-card__try-controls">
               <UButton
                 :loading="loading"
-                icon="i-lucide-radar"
                 color="primary"
                 variant="solid"
                 size="md"
