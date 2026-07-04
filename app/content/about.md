@@ -14,7 +14,7 @@ Every day you see something new, and almost none of it was meant for you.
 
 IP Crawl exists to turn public exposure into pressure and make both manufacturers and users take privacy seriously.
 
-> **Quick check:** You and your loved ones can easily check if they're exposed by visiting [ismycameraexposed.com](https://ismycameraexposed.com), which redirects to IP Crawl's free, no-login location-based exposure checker. If you're a developer or extra tech-savvy, you can also use IP Crawl's [public API](/api) to build your own security module.
+> **Quick check:** You and your loved ones can easily check if they're exposed by visiting [ismycameraexposed.com](https://ismycameraexposed.com), which redirects to IP Crawl's free, no-login location-based exposure checker. If you're a developer, you can also use IP Crawl's [public API](/api) to build your own security module.
 
 ## The goal: 0 cameras
 
