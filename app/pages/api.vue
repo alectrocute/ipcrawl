@@ -159,16 +159,16 @@ async function copy(text: string, key: string) {
 
       <main class="api-body">
         <h1 class="api-title">
-          API
+          Public API
         </h1>
         <p class="api-subtitle">
-          Check if your public IP address is associated with a webcam in IP Crawl's catalog.
+          Check if your public IP address is associated with a webcam in IP Crawl's catalog. This endpoint is provided free as a public service.
         </p>
 
         <!-- Endpoint card -->
         <section class="api-card">
           <div class="api-card__head">
-            <code class="api-path">{{ sampleUrl }}</code>
+            <code class="api-path select-all">{{ sampleUrl }}</code>
             <UButton
               size="xs"
               color="neutral"
@@ -197,36 +197,18 @@ async function copy(text: string, key: string) {
                   <code class="api-field__name">found</code>
                   <span class="api-field__type">boolean</span>
                 </dt>
-                <dd class="api-field__desc">
-                  <code>true</code> if the requesting IP matches at least one
-                  row in the catalog, <code>false</code> otherwise — including
-                  when no IP could be resolved or the DB is cold (the endpoint
-                  degrades to "not found" rather than 500ing).
-                </dd>
               </div>
               <div class="api-field">
                 <dt class="api-field__head">
                   <code class="api-field__name">ip</code>
                   <span class="api-field__type">string</span>
                 </dt>
-                <dd class="api-field__desc">
-                  The IP resolved from <code>cf-connecting-ip</code> (then
-                  <code>x-forwarded-for</code>), echoed back so a caller can
-                  confirm which address was checked. <code>"unknown"</code> when
-                  no forwarded IP is present.
-                </dd>
               </div>
               <div class="api-field">
                 <dt class="api-field__head">
                   <code class="api-field__name">checkedAt</code>
                   <span class="api-field__type">number</span>
                 </dt>
-                <dd class="api-field__desc">
-                  Server epoch-ms clock at the moment the lookup ran. Compare to
-                  <code>Date.now()</code> to detect a cached answer: near-zero
-                  is a fresh origin hit, up to ~300000ms (5 min) is the browser
-                  cache serving the prior answer.
-                </dd>
               </div>
             </dl>
 
@@ -249,7 +231,7 @@ async function copy(text: string, key: string) {
                 size="md"
                 @click="runCheck"
               >
-                Check my IP
+                Try it now
               </UButton>
               <USwitch
                 v-model="bypassCache"
@@ -379,6 +361,7 @@ async function copy(text: string, key: string) {
           <ul class="api-notes">
             <li>NOTE: I reserve the right to ban your access from IP Crawl's API at any moment for any reason.</li>
             <li>I'm planning to build out this API further, so make sure to check back for updates.</li>
+            <li>api-support[at]ipcrawl[dot]com</li>
           </ul>
         </section>
       </main>
