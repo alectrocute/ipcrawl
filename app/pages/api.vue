@@ -377,9 +377,8 @@ async function copy(text: string, key: string) {
             Notes
           </h2>
           <ul class="api-notes">
-            <li>This API is the programmatic surface of the "Is My Camera Exposed?" campaign, so it lives on that domain.</li>
-            <li><code>found</code> reflects a match against the public catalog at request time. A camera that's already been secured drops off within the next scan cycle.</li>
-            <li><code>checkedAt</code> is the server's epoch-ms clock when the lookup ran. Compare it to <code>Date.now()</code> to tell a fresh answer from a cached one: near-zero is a fresh origin hit, up to ~300000ms (5 min) is the browser cache serving the prior answer.</li>
+            <li>NOTE: I reserve the right to ban your access from IP Crawl's API at any moment for any reason.</li>
+            <li>I'm planning to build out this API further, so make sure to check back for updates.</li>
           </ul>
         </section>
       </main>
