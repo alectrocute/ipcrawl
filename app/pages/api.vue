@@ -162,13 +162,12 @@ async function copy(text: string, key: string) {
           API
         </h1>
         <p class="api-subtitle">
-          Check if your public IP address is exposed in IP Crawl's catalog.
+          Check if your public IP address is associated with a webcam in IP Crawl's catalog.
         </p>
 
         <!-- Endpoint card -->
         <section class="api-card">
           <div class="api-card__head">
-            <span class="api-method">GET</span>
             <code class="api-path">{{ sampleUrl }}</code>
             <UButton
               size="xs"

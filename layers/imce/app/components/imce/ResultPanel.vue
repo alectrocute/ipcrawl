@@ -21,6 +21,10 @@ function formatKm(km: number | null | undefined): string {
 const nearestLabel = computed(() => formatKm(props.nearby?.nearestKm))
 const radiusLabel = computed(() => formatKm(radiusKm.value))
 const camerasShown = computed(() => props.nearby?.cameras ?? [])
+const expanded = ref(false)
+const maxThumbs = computed(() => expanded.value ? camerasShown.value.length : 8)
+const visibleThumbs = computed(() => camerasShown.value.slice(0, maxThumbs.value))
+const overflowCount = computed(() => Math.max(0, camerasShown.value.length - 8))
 
 const countLabel = computed(() => (truncated.value ? `${count.value}+` : `${count.value}`))
 
@@ -69,7 +73,7 @@ const nearestSuffix = computed(() =>
       class="imce-result__thumbs"
     >
       <button
-        v-for="cam in camerasShown.slice(0, 8)"
+        v-for="cam in visibleThumbs"
         :key="cam.id"
         type="button"
         class="imce-result__thumb"
@@ -88,12 +92,15 @@ const nearestSuffix = computed(() =>
           title="Live now"
         />
       </button>
-      <div
-        v-if="count > camerasShown.slice(0, 8).length"
+      <button
+        v-if="!expanded && overflowCount > 0"
+        type="button"
         class="imce-result__thumb imce-result__thumb--more"
+        :title="`Show all ${count} cameras`"
+        @click="expanded = true"
       >
-        +{{ count - camerasShown.slice(0, 8).length }}
-      </div>
+        +{{ overflowCount }}
+      </button>
     </div>
 
     <p
