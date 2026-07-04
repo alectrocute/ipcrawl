@@ -49,7 +49,7 @@ const updatedLabel = computed(() => {
           Network stats
         </h1>
         <p class="stats-subtitle">
-          Breakdown by country, network, and manufacturer.
+          Comprehensive breakdown of the IP Crawl catalog by country, network, manufacturer and more.
           <span
             v-if="updatedLabel"
             class="stats-subtitle__stamp"
@@ -101,8 +101,8 @@ const updatedLabel = computed(() => {
                 By country
               </h2>
               <span class="stats-section__legend">
-                <span class="stats-section__key stats-section__key--total" /> cataloged
                 <span class="stats-section__key stats-section__key--live" /> live now
+                <span class="stats-section__key stats-section__key--total" /> cataloged
               </span>
             </header>
             <div class="stats-panel">
@@ -118,7 +118,6 @@ const updatedLabel = computed(() => {
               <h2 class="stats-section__title">
                 By ISP
               </h2>
-              <span class="stats-section__note">top {{ data.orgs.length }} of {{ data.totals.orgs.toLocaleString('en-US') }} ISPs &amp; hosting orgs</span>
             </header>
             <div class="stats-panel">
               <StatsBarList
@@ -318,10 +317,12 @@ const updatedLabel = computed(() => {
 }
 
 .stats-section__key--total {
+  background: linear-gradient(90deg, rgb(var(--phosphor-rgb) / 0.22) 0%, rgb(var(--phosphor-rgb) / 0.78) 100%);
 }
 
 .stats-section__key--live {
   margin-left: 10px;
+  background: var(--phosphor);
 }
 
 .stats-panel {
