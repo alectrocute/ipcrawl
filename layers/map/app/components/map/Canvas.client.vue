@@ -291,6 +291,23 @@ function renderUserMarker() {
   }).addTo(map)
 }
 
+/**
+ * Nudge the map so the user-location pin lands in the top third of the
+ * viewport instead of dead centre — on narrow viewports the result-panel
+ * bottom sheet and scanning pill overlay the lower portion of the map
+ * and would otherwise hide the pin entirely.
+ */
+function offsetForUserPin() {
+  if (!map || !props.userLocation) return
+  // Only on mobile layouts where the bottom sheet covers the map.
+  if (window.innerWidth > 640) return
+  const vh = window.innerHeight
+  // Pin starts at vertical centre (50 %). A negative-y panBy shifts the
+  // map *up*, moving the geographic point higher on screen — target ~33 %
+  // from the top (a 17 % offset).
+  map.panBy([0, -(vh * 0.17)], { animate: false })
+}
+
 onMounted(async () => {
   const container = await resolveContainer()
   if (!container) return
@@ -324,6 +341,7 @@ onMounted(async () => {
 
   map.whenReady(() => {
     map?.invalidateSize()
+    offsetForUserPin()
     emitView()
   })
   map.on('moveend', emitView)
