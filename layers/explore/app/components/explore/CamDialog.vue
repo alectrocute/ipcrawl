@@ -150,13 +150,11 @@ const metaRows = computed<MetaRow[]>(() => {
   if (!d) return []
   return [
     { label: 'Favorites', value: favCount.value.toLocaleString() },
-    { label: 'Manufacturer', value: d.manufacturer || '—' },
-    { label: 'ISP / Org', value: d.org || '—' },
-    { label: 'Country', value: d.country || '—' },
-    { label: 'City', value: d.city || '—' },
+    { label: 'Manufacturer', value: d.manufacturer || 'Unknown' },
+    { label: 'ISP / Org', value: d.org || 'Unknown' },
+    { label: 'Country', value: d.country || 'Unknown' },
+    { label: 'City', value: d.city || 'Unknown' },
     { label: 'Coordinates', value: formatCoords(d.lat, d.lon) },
-    { label: 'Protocol', value: d.module || '—' },
-    { label: 'Port', value: d.port != null ? String(d.port) : '—' },
     { label: 'First seen', value: formatDate(d.firstSeenAt) },
     { label: 'Last seen', value: formatDate(d.lastSeenAt) }
   ]
