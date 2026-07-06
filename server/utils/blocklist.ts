@@ -13,7 +13,8 @@ interface BlockRule {
  * (homelabs, captive portals, vendor demo pages, etc.).
  */
 const BLOCKED: BlockRule[] = [
-  { country: 'Japan', city: 'Tokyo', org: 'Asahi Net' }
+  { country: 'Japan', city: 'Tokyo', org: 'Asahi Net' },
+  { country: 'Austria', city: 'Innsbruck', org: 'myNET Internet Solutions' }
 ]
 
 /**
