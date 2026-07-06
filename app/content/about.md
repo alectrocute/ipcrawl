@@ -1,5 +1,9 @@
 ## About IP Crawl
 
+tl;dr: I'm on a mission to force IP camera manufacturers—including Hikvision, Dahua, Blue Iris, Axis, Wyze, and others—to ship products that are secure by default, even if it means accepting a modest increase in customer support costs.
+
+---
+
 We have a serious problem.
 
 A shocking number of major manufacturers (Hikvision, Blue Iris, Axis, D-Link, Wyze, Dahua, Sony and a long tail of others) engineer and ship webcams that are completely insecure by default.
