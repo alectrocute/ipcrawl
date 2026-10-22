@@ -75,13 +75,30 @@ export async function httpGet(
   try {
     const res = await fetch(url, {
       signal: signal ?? ctrl.signal,
-      redirect: 'follow',
+      redirect: 'manual',
       headers: {
         'User-Agent': BROWSER_UA,
         'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9'
       }
     })
+    if (res.status >= 300 && res.status < 400) {
+      await res.body?.cancel().catch(() => {})
+      const loc = res.headers.get('location')
+      if (!loc || _redirectsLeft <= 0) {
+        return { status: res.status, contentType: '', body: new Uint8Array(0) }
+      }
+      let nextUrl: URL
+      try {
+        nextUrl = new URL(loc, parsed)
+      } catch {
+        return { error: 'bad-redirect-url' }
+      }
+      if (nextUrl.origin !== parsed.origin) {
+        return { error: 'cross-origin-redirect-blocked' }
+      }
+      return httpGet(nextUrl.toString(), timeoutMs, maxBytes, allowPartial, _redirectsLeft - 1, signal)
+    }
     const contentType = (res.headers.get('content-type') || '').toLowerCase()
     if (!res.ok) {
       const { body, tooLarge } = await readBoundedBody(res, maxBytes, allowPartial)

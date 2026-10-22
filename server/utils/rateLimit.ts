@@ -61,10 +61,11 @@ export function isFallbackLimited(name: RateLimitBindingName, key: string): bool
   return false
 }
 
-/** Client IP — prefers the CDN header, falls back to h3's helper. */
+/** Client IP - prefers the validated nginx real-ip header. */
 export function getClientIp(event: H3Event): string {
-  return getRequestHeader(event, 'cf-connecting-ip')
-    || getRequestIP(event, { xForwardedFor: true })
+  return getRequestHeader(event, 'x-real-ip')
+    || getRequestHeader(event, 'cf-connecting-ip')
+    || getRequestIP(event, { xForwardedFor: false })
     || 'unknown'
 }
 
